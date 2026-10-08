@@ -677,6 +677,35 @@
             </button>
         </div>
 
+        <div class="space-y-2 mb-4">
+            <p class="text-xs text-slate-400 mb-2">気になる悩みを顧問に直談判してください：</p>
+            <div class="grid grid-cols-1 gap-1.5 text-xs">
+                <button onclick="pickConsultTopic('early_wake')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700/90 border border-slate-700 text-left text-slate-200 transition">
+                    🌅 「どうしても二度寝して4:30に起きられません」
+                </button>
+                <button onclick="pickConsultTopic('lazy_start')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700/90 border border-slate-700 text-left text-slate-200 transition">
+                    ⚡️ 「朝、机に向かうのが億劫でめんどくさいです」
+                </button>
+                <button onclick="pickConsultTopic('too_big')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700/90 border border-slate-700 text-left text-slate-200 transition">
+                    ✂️ 「やることが多すぎて、何から手をつければいいかフリーズします」
+                </button>
+                <button onclick="pickConsultTopic('quality_trap')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700/90 border border-slate-700 text-left text-slate-200 transition">
+                    🎨 「完璧なものを描こうとして手が止まってしまいます」
+                </button>
+            </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800">
+            <div class="flex gap-2">
+                <input id="input-custom-consult" type="text" placeholder="自由に入力して相談..." class="flex-1 px-3 py-2 bg-slate-800 rounded-xl border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400">
+                <button onclick="submitCustomConsult()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition">
+                    相談する
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 初回音声アンロック用スタートオーバーレイ（ブラウザの自動音声ブロック解除用） -->
 <div id="voice-start-overlay" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-amber-400/40 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl space-y-4">
@@ -1656,6 +1685,9 @@ function renderCurrentStep() {
         speakerTitle.innerHTML = `<i data-lucide="sparkle" class="w-3.5 h-3.5 text-amber-400"></i><span>顧問（先生）の発言</span>`;
     } else {
         setCameraView('female');
+        speakerTitle.innerHTML = `<i data-lucide="sparkle" class="w-3.5 h-3.5 text-sky-400"></i><span>パートナー顧問の発言</span>`;
+    }
+
     // Typewriter effect synchronized with Lip-Sync Engine and Web Speech Voice
     const textContainer = document.getElementById('dialogue-text');
     clearInterval(typewriterTimer);
