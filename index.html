@@ -431,6 +431,92 @@
                         </span>
                         <span class="text-[10px] text-slate-400 font-mono">Asa Atelier • 04:30 AM</span>
                     </div>
+
+                    <!-- Main Dialogue Text Container -->
+                    <div class="min-h-[110px] sm:min-h-[130px] flex items-start">
+                        <p id="dialogue-text" class="text-xs sm:text-sm text-slate-100 font-medium leading-relaxed whitespace-pre-line tracking-wide select-text"></p>
+                    </div>
+
+                    <!-- Dialogue Note / Sub commentary -->
+                    <div class="mt-2 p-2 rounded-xl bg-slate-900/60 border border-slate-700/50 flex items-start gap-2">
+                        <i data-lucide="info" class="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5"></i>
+                        <span id="dialogue-note-text" class="text-[11px] text-slate-300 leading-snug"></span>
+                    </div>
+                </div>
+
+                <!-- Interactive Training Mini-Game Area -->
+                <div id="training-interactive-area" class="my-3 flex justify-center"></div>
+
+                <!-- Player Choices / Next Actions Area -->
+                <div id="player-choices" class="space-y-2 pt-2 border-t border-slate-700/60">
+                    <!-- Dynamic choice buttons inserted here -->
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- 口元キャリブレーションモーダル -->
+<div id="modal-calibration" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-slate-900 border border-amber-400/40 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl relative text-xs">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-3">
+            <div class="flex items-center gap-2">
+                <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i>
+                <h3 class="text-sm font-bold text-white font-serif-title">口元リップシンク位置調整</h3>
+            </div>
+            <button onclick="closeModal('modal-calibration')" class="text-slate-400 hover:text-white p-1">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <div class="space-y-3.5 text-slate-300">
+            <!-- 先生 -->
+            <div class="p-3 bg-slate-800/80 rounded-2xl border border-slate-700 space-y-2">
+                <div class="flex justify-between items-center text-amber-300 font-bold">
+                    <span>顧問（先生 / 手前）</span>
+                    <button onclick="testTalkMouth('male')" class="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] border border-amber-400/30">喋らせてみる</button>
+                </div>
+                <div class="flex items-center justify-between text-[11px]">
+                    <span>横位置 (X): <span id="val-male-x" class="font-mono text-amber-400">51.0%</span></span>
+                    <input id="slider-male-x" type="range" min="10" max="90" step="0.5" value="51" oninput="updateMouthConfig()" class="w-32">
+                </div>
+                <div class="flex items-center justify-between text-[11px]">
+                    <span>縦位置 (Y): <span id="val-male-y" class="font-mono text-amber-400">46.0%</span></span>
+                    <input id="slider-male-y" type="range" min="10" max="90" step="0.5" value="46" oninput="updateMouthConfig()" class="w-32">
+                </div>
+            </div>
+
+            <!-- パートナー -->
+            <div class="p-3 bg-slate-800/80 rounded-2xl border border-slate-700 space-y-2">
+                <div class="flex justify-between items-center text-sky-300 font-bold">
+                    <span>パートナー顧問（左奥 / メガネ）</span>
+                    <button onclick="testTalkMouth('female')" class="px-2 py-0.5 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-[10px] border border-sky-400/30">喋らせてみる</button>
+                </div>
+                <div class="flex items-center justify-between text-[11px]">
+                    <span>横位置 (X): <span id="val-female-x" class="font-mono text-sky-400">32.0%</span></span>
+                    <input id="slider-female-x" type="range" min="10" max="90" step="0.5" value="32" oninput="updateMouthConfig()" class="w-32">
+                </div>
+                <div class="flex items-center justify-between text-[11px]">
+                    <span>縦位置 (Y): <span id="val-female-y" class="font-mono text-sky-400">59.0%</span></span>
+                    <input id="slider-female-y" type="range" min="10" max="90" step="0.5" value="59" oninput="updateMouthConfig()" class="w-32">
+                </div>
+            </div>
+
+            <!-- 開口サイズ -->
+            <div class="flex items-center justify-between p-2.5 bg-slate-800/60 rounded-xl">
+                <span>口の開閉スケール:</span>
+                <input id="slider-mouth-scale" type="range" min="0.5" max="2.0" step="0.1" value="1.0" oninput="updateMouthConfig()" class="w-32">
+            </div>
+        </div>
+
+        <div class="mt-4 pt-2.5 border-t border-slate-800 text-right">
+            <button onclick="closeModal('modal-calibration')" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition">
+                完了
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- 動画化手順・ガイドモーダル -->
 <div id="modal-video-guide" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 hidden">
     <div class="bg-slate-900 border border-purple-500/40 rounded-3xl p-5 sm:p-6 max-w-xl w-full shadow-2xl relative max-h-[88vh] flex flex-col">
