@@ -437,10 +437,16 @@
                         <p id="dialogue-text" class="text-xs sm:text-sm text-slate-100 font-medium leading-relaxed whitespace-pre-line tracking-wide select-text"></p>
                     </div>
 
-                    <!-- Dialogue Note / Sub commentary -->
-                    <div class="mt-2 p-2 rounded-xl bg-slate-900/60 border border-slate-700/50 flex items-start gap-2">
-                        <i data-lucide="info" class="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5"></i>
-                        <span id="dialogue-note-text" class="text-[11px] text-slate-300 leading-snug"></span>
+                    <!-- Voice control and Dialogue Note / Sub commentary -->
+                    <div class="mt-2 flex items-center justify-between gap-2">
+                        <div class="p-2 rounded-xl bg-slate-900/60 border border-slate-700/50 flex items-start gap-2 flex-1">
+                            <i data-lucide="info" class="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5"></i>
+                            <span id="dialogue-note-text" class="text-[11px] text-slate-300 leading-snug"></span>
+                        </div>
+                        <button id="btn-replay-voice" onclick="replayCurrentDialogueSpeech()" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] font-bold text-amber-300 flex items-center gap-1 shrink-0 transition" title="セリフ音声をもう一度再生">
+                            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+                            <span class="hidden sm:inline">もう一度聴く</span>
+                        </button>
                     </div>
                 </div>
 
@@ -671,39 +677,145 @@
             </button>
         </div>
 
-        <p class="text-xs text-slate-300 mb-3">
-            今、あなたが創作や朝の習慣でぶつかっている悩みは何ですか？お二人が画面越しに掛け合いで直接答えてくれます。
-        </p>
-
-        <div class="space-y-3">
-            <div>
-                <label class="text-[11px] text-slate-400 block mb-1">お悩みテーマを選択：</label>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <button onclick="pickConsultTopic('early_wake')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left text-slate-200">
-                        ⏰ どうしても二度寝・朝起きられない
-                    </button>
-                    <button onclick="pickConsultTopic('lazy_start')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left text-slate-200">
-                        😩 めんどくさくて着手できない
-                    </button>
-                    <button onclick="pickConsultTopic('too_big')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left text-slate-200">
-                        🏔️ タスクが重すぎて頭がフリーズ
-                    </button>
-                    <button onclick="pickConsultTopic('quality_trap')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left text-slate-200">
-                        🎨 完璧主義で筆が進まない
-                    </button>
-                </div>
-            </div>
-
-            <div>
-                <label class="text-[11px] text-slate-400 block mb-1">または自由に入力（ひとこと）：</label>
-                <div class="flex gap-2">
-                    <input id="input-custom-consult" type="text" placeholder="例: 締め切り前日にパニックになる" class="flex-1 px-3 py-2 bg-slate-800 rounded-xl border border-slate-700 text-xs text-white focus:outline-none focus:border-sky-400">
-                    <button onclick="submitCustomConsult()" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold">相談する</button>
-                </div>
-            </div>
+<!-- 初回音声アンロック用スタートオーバーレイ（ブラウザの自動音声ブロック解除用） -->
+<div id="voice-start-overlay" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-400/40 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl space-y-4">
+        <div class="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-300 mx-auto flex items-center justify-center">
+            <i data-lucide="volume-2" class="w-8 h-8 animate-pulse"></i>
         </div>
+        <div>
+            <h3 class="text-base font-extrabold text-white font-serif-title">二人顧問の生声修練室へようこそ</h3>
+            <p class="text-xs text-slate-300 mt-1">セリフの音声読み上げと動画を同期して開始します。</p>
+        </div>
+        <button onclick="dismissVoiceOverlayAndStart()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-sky-500 hover:opacity-90 text-slate-950 font-black rounded-xl text-sm transition shadow-lg shadow-amber-500/20">
+            🎙️ 音声付きで修練を開始する
+        </button>
     </div>
 </div>
+
+<script>
+/* ==========================================================================
+   Web Speech API 音声合成エンジン（先生とパートナーの声質分け＆動画同期）
+   ========================================================================== */
+class DojoVoiceNarrator {
+    constructor() {
+        this.synth = window.speechSynthesis || null;
+        this.enabled = true;
+        this.currentUtterance = null;
+        this.voices = [];
+        if (this.synth) {
+            this.loadVoices();
+            if (this.synth.onvoiceschanged !== undefined) {
+                this.synth.onvoiceschanged = () => this.loadVoices();
+            }
+        }
+    }
+
+    loadVoices() {
+        if (!this.synth) return;
+        this.voices = this.synth.getVoices().filter(v => v.lang.startsWith('ja') || v.lang.includes('JP'));
+    }
+
+    stop() {
+        if (this.synth) {
+            this.synth.cancel();
+        }
+        this.currentUtterance = null;
+        this.syncVideoSpeakingState(false);
+    }
+
+    speak(text, speaker = 'male', onBoundary = null, onEnd = null) {
+        if (!this.synth || !this.enabled) {
+            if (onEnd) onEnd();
+            return;
+        }
+
+        this.stop();
+
+        // 記号や改行を自然なポーズに置換
+        const cleanText = text.replace(/【.*?】/g, '').replace(/https?:\/\/\S+/g, '');
+        const utter = new SpeechSynthesisUtterance(cleanText);
+        utter.lang = 'ja-JP';
+
+        // 声質の差別化
+        // 顧問（先生）: 低め・温かみのある威厳（ピッチ 0.85、レート 1.0）
+        // パートナー顧問: 明るめ・クリアでテンポ良い女性調（ピッチ 1.35、レート 1.12）
+        if (speaker === 'male') {
+            utter.pitch = 0.85;
+            utter.rate = 1.02;
+            const maleVoice = this.voices.find(v => v.name.includes('Ichiro') || v.name.includes('Otoya') || v.name.includes('Male') || v.name.includes('Keita'));
+            if (maleVoice) utter.voice = maleVoice;
+        } else {
+            utter.pitch = 1.35;
+            utter.rate = 1.12;
+            const femaleVoice = this.voices.find(v => v.name.includes('Kyoko') || v.name.includes('Nanami') || v.name.includes('Ayumi') || v.name.includes('Female') || v.name.includes('Haruka'));
+            if (femaleVoice) utter.voice = femaleVoice;
+        }
+
+        utter.onstart = () => {
+            this.syncVideoSpeakingState(true, speaker);
+        };
+
+        utter.onboundary = (e) => {
+            triggerLipSyncPulse(speaker, cleanText.charAt(e.charIndex) || 'あ');
+            if (onBoundary) onBoundary(e);
+        };
+
+        utter.onend = () => {
+            this.syncVideoSpeakingState(false);
+            stopLipSync();
+            if (onEnd) onEnd();
+        };
+
+        utter.onerror = () => {
+            this.syncVideoSpeakingState(false);
+            stopLipSync();
+            if (onEnd) onEnd();
+        };
+
+        this.currentUtterance = utter;
+        this.synth.speak(utter);
+    }
+
+    // 動画再生とセリフ発声の連動制御
+    syncVideoSpeakingState(isSpeaking, speaker = 'male') {
+        const vidEl = document.getElementById('advisor-live-video');
+        const micLabel = document.getElementById('speaker-mic-name');
+
+        if (!vidEl || vidEl.classList.contains('hidden')) return;
+
+        if (isSpeaking) {
+            // 発話中は動画を再生＆通常速度
+            vidEl.playbackRate = 1.0;
+            if (vidEl.paused) vidEl.play().catch(() => {});
+            if (micLabel) micLabel.innerText = speaker === 'male' ? "SENSEI TALKING" : "PARTNER TALKING";
+            triggerWaveformPulse();
+        } else {
+            // セリフが終わったら動画をポーズ（またはゆっくり呼吸待機）
+            vidEl.pause();
+            if (micLabel) micLabel.innerText = "MIC IDLE";
+        }
+    }
+}
+
+const voiceNarrator = new DojoVoiceNarrator();
+
+function dismissVoiceOverlayAndStart() {
+    document.getElementById('voice-start-overlay').classList.add('hidden');
+    audio.init();
+    const vidEl = document.getElementById('advisor-live-video');
+    if (vidEl) vidEl.play().catch(() => {});
+    replayCurrentDialogueSpeech();
+}
+
+function replayCurrentDialogueSpeech() {
+    const chapData = SCENARIO_CHAPTERS[playerStats.currentChapter];
+    const stepData = chapData.steps[playerStats.currentStep];
+    if (stepData) {
+        voiceNarrator.speak(stepData.text, stepData.speaker);
+    }
+}
+</script>
 
 <script>
 class DojoAudio {
@@ -1544,23 +1656,24 @@ function renderCurrentStep() {
         speakerTitle.innerHTML = `<i data-lucide="sparkle" class="w-3.5 h-3.5 text-amber-400"></i><span>顧問（先生）の発言</span>`;
     } else {
         setCameraView('female');
-        speakerTitle.innerHTML = `<i data-lucide="sparkle" class="w-3.5 h-3.5 text-sky-400"></i><span>パートナー顧問の発言</span>`;
-    }
-
-    // Typewriter effect synchronized with Lip-Sync Engine
+    // Typewriter effect synchronized with Lip-Sync Engine and Web Speech Voice
     const textContainer = document.getElementById('dialogue-text');
     clearInterval(typewriterTimer);
+    voiceNarrator.stop();
     stopLipSync();
     textContainer.innerText = "";
     
     let charIndex = 0;
     const fullText = stepData.text;
+
+    // 音声読み上げをスタート（動画と口元が自動連動）
+    voiceNarrator.speak(fullText, stepData.speaker);
+
     typewriterTimer = setInterval(() => {
         if (charIndex < fullText.length) {
             const curChar = fullText.charAt(charIndex);
             textContainer.innerText += curChar;
-            
-            // リップシンクのパルス発火（文字送り・母音に合わせて開閉）
+
             if (charIndex % 2 === 0) {
                 triggerLipSyncPulse(stepData.speaker, curChar);
             }
@@ -1568,9 +1681,8 @@ function renderCurrentStep() {
             charIndex++;
         } else {
             clearInterval(typewriterTimer);
-            stopLipSync(); // セリフ完了で口を閉じる
         }
-    }, 28);
+    }, 32);
 
     // Dialogue note
     document.getElementById('dialogue-note-text').innerText = stepData.note || "";
@@ -2044,8 +2156,12 @@ function applyConsultAnswer(res) {
 
     const textContainer = document.getElementById('dialogue-text');
     clearInterval(typewriterTimer);
+    voiceNarrator.stop();
     stopLipSync();
     textContainer.innerText = "";
+
+    // 相談回答を音声読み上げ
+    voiceNarrator.speak(res.text, res.speaker);
 
     let charIndex = 0;
     const fullText = res.text;
@@ -2057,9 +2173,8 @@ function applyConsultAnswer(res) {
             charIndex++;
         } else {
             clearInterval(typewriterTimer);
-            stopLipSync();
         }
-    }, 28);
+    }, 32);
 
     document.getElementById('dialogue-note-text').innerText = res.note;
 
