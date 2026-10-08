@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>朝メソッド道場 〜二人顧問との対話修練録〜</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
+
+        body {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            background-color: #070b14;
+            color: #f8fafc;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-serif-title {
+            font-family: 'Shippori Mincho', serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.35);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(56, 189, 248, 0.6);
+        }
+
+        /* Studio Video Stage & Panning */
+        .video-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.25rem;
+            background: #000000;
+        }
+
+        .stream-viewport {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.85s cubic-bezier(0.25, 1, 0.5, 1), filter 0.6s ease;
+            transform-origin: center center;
+        }
+
+        .advisor-feed-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Camera Focused on Front Advisor (Male / Sensei) */
+        .cam-focus-male {
+            transform: scale(1.35) translate(8%, -6%);
+            filter: contrast(102%) brightness(102%);
+        }
+
+        /* Camera Focused on Partner Advisor (Female with glasses, rear right) */
+        .cam-focus-female {
+            transform: scale(1.62) translate(-14%, 2%);
+            filter: contrast(105%) brightness(104%);
+        }
+
+        /* Full Studio Wide View */
+        .cam-focus-wide {
+            transform: scale(1.0) translate(0%, 0%);
+            filter: contrast(100%) brightness(100%);
+        }
+
+        /* Scanlines Overlay */
+        .scanlines {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.18) 50%);
+            background-size: 100% 3px;
+            pointer-events: none;
+        }
+
+        /* Live Audio Waveform Bars */
+        .voice-bar {
+            width: 3px;
+            border-radius: 9999px;
+            background-color: #38bdf8;
+            transition: height 0.08s ease;
+        }
+
+        /* Drag over visual cue */
+        .drag-highlight {
+            border: 2px dashed #38bdf8 !important;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.4) !important;
+        }
+
+        /* Mouth Overlay Canvas */
+        #mouth-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        /* Subtle breathing animation for talking head */
+        @keyframes headBob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-1px); }
+        }
+        .head-speaking {
+            animation: headBob 0.35s ease-in-out infinite;
+        }
+    </style>
+    <script>
+    // Candidate photo paths ordered by priority
+    const IMAGE_CANDIDATES = [
+        'watermarked_img_15793579457143670156.jpg',
+        'スクリーンショット 2022-04-14 5.26.41_2.jpg',
+        'スクリーンショット 2022-04-14 5.26.41.jpg'
+    ];
+    let currentCandidateIdx = 0;
+
+    function tryNextImageCandidate(imgEl) {
+        currentCandidateIdx++;
+        if (currentCandidateIdx < IMAGE_CANDIDATES.length) {
+            imgEl.src = IMAGE_CANDIDATES[currentCandidateIdx];
+        } else {
+            // Fallback canvas generator if local file paths fail in restrictive iframe sandboxes
+            createRealisticFallbackCanvas(imgEl);
+        }
+    }
+
+    function createRealisticFallbackCanvas(imgEl) {
+        const cvs = document.createElement('canvas');
+        cvs.width = 640;
+        cvs.height = 360;
+        const ctx = cvs.getContext('2d');
+
+        // Room interior
+        const grad = ctx.createLinearGradient(0, 0, 640, 360);
+        grad.addColorStop(0, '#2b2926');
+        grad.addColorStop(1, '#151310');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 640, 360);
+
+        // Wall calendar
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(45, 50, 75, 110);
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(45, 50, 75, 30);
+
+        // Shelf
+        ctx.fillStyle = '#423c34';
+        ctx.fillRect(495, 75, 135, 270);
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(510, 95, 105, 70);
+
+        // Front Male Advisor (Sensei)
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.ellipse(280, 410, 180, 160, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#f3caa1';
+        ctx.beginPath();
+        ctx.ellipse(280, 165, 88, 105, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Buzz cut
+        ctx.fillStyle = '#1c1917';
+        ctx.beginPath();
+        ctx.ellipse(280, 125, 87, 70, 0, Math.PI, 0);
+        ctx.fill();
+
+        // Eyes looking up & right
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.ellipse(250, 145, 15, 10, -0.1, 0, Math.PI * 2);
+        ctx.ellipse(325, 145, 15, 10, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#1c1917';
+        ctx.beginPath();
+        ctx.arc(252, 142, 6, 0, Math.PI * 2);
+        ctx.arc(327, 142, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rear Female Advisor (Glasses)
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.ellipse(435, 400, 125, 140, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stripes
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 6;
+        for (let y = 310; y < 390; y += 18) {
+            ctx.beginPath();
+            ctx.moveTo(380, y);
+            ctx.lineTo(490, y);
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = '#f5cba7';
+        ctx.beginPath();
+        ctx.ellipse(435, 235, 62, 74, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair
+        ctx.fillStyle = '#3b2518';
+        ctx.beginPath();
+        ctx.ellipse(435, 205, 64, 52, 0, Math.PI, 0);
+        ctx.fill();
+
+        // Glasses
+        ctx.strokeStyle = '#09090b';
+        ctx.lineWidth = 4.5;
+        ctx.strokeRect(392, 220, 36, 26);
+        ctx.strokeRect(442, 220, 36, 26);
+        ctx.beginPath();
+        ctx.moveTo(428, 232);
+        ctx.lineTo(442, 232);
+        ctx.stroke();
+
+        imgEl.src = cvs.toDataURL();
+    }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
+
+<header class="w-full max-w-5xl mx-auto px-4 pt-3 pb-2 flex items-center justify-between border-b border-slate-800/80 relative z-20">
+    <div class="flex items-center gap-3">
+        <!-- Live studio indicator -->
+        <div class="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 shadow-inner">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+            <span class="text-[11px] font-black text-rose-400 font-mono tracking-wider">LIVE 05:26:41</span>
+        </div>
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-sm sm:text-base font-extrabold tracking-wider font-serif-title text-amber-100">
+                    朝メソッド道場
+                </h1>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-950/80 text-sky-300 border border-sky-400/30">二人顧問・生声リップシンク修練室</span>
+            </div>
+            <p class="text-[10px] text-slate-400">実写の二人顧問がセリフに合わせて喋る！朝メソッドの真髄を血肉化する</p>
+        </div>
+    </div>
+
+    <!-- Quick Tool Buttons -->
+    <div class="flex items-center gap-2">
+        <button onclick="openCalibrationModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/80 text-xs flex items-center gap-1.5 text-amber-300 transition" title="口元の位置や口パク感度を調整">
+            <i data-lucide="settings" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span class="text-[11px] hidden sm:inline">口元調整</span>
+        </button>
+        <button onclick="openVideoGuideModal()" class="px-2.5 py-1.5 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 text-xs flex items-center gap-1.5 text-purple-200 transition" title="顧問を動画化する具体的な手順ガイド">
+            <i data-lucide="film" class="w-3.5 h-3.5 text-purple-300"></i>
+            <span class="text-[11px] font-bold">動画化ガイド</span>
+        </button>
+        <button id="btn-sound" onclick="toggleSound()" class="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 text-xs flex items-center gap-1.5 text-slate-300 transition">
+            <i id="icon-sound" data-lucide="volume-2" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span id="label-sound" class="text-[11px] hidden sm:inline">音: ON</span>
+        </button>
+        <button onclick="openNotebookModal()" class="px-2.5 py-1.5 rounded-xl bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/40 text-xs flex items-center gap-1.5 text-indigo-200 transition">
+            <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-300"></i>
+            <span class="text-[11px]">金言手帳 (<span id="unlocked-count">0</span>)</span>
+        </button>
+        <button onclick="openConsultModal()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/35 text-xs flex items-center gap-1.5 text-amber-300 transition font-bold">
+            <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+            <span class="text-[11px]">顧問直談判</span>
+        </button>
+    </div>
+</header>
+
+<main class="w-full max-w-5xl mx-auto px-4 py-2.5 flex-1 flex flex-col gap-2.5 relative z-10">
+
+    <!-- Status Stats (淡々力, タスク分解眼, ととのい度) -->
+    <section class="grid grid-cols-3 gap-2 bg-slate-900/70 p-2.5 rounded-2xl border border-slate-800/90 backdrop-blur-md">
+        <!-- 淡々力 -->
+        <div class="space-y-1">
+            <div class="flex justify-between items-center text-[11px]">
+                <span class="text-slate-400 flex items-center gap-1">
+                    <i data-lucide="zap" class="w-3 h-3 text-emerald-400"></i> 淡々力
+                </span>
+                <span id="stat-dantan" class="font-bold text-emerald-300 font-mono">15</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div id="bar-dantan" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500" style="width: 20%;"></div>
+            </div>
+        </div>
+
+        <!-- タスク分解眼 -->
+        <div class="space-y-1">
+            <div class="flex justify-between items-center text-[11px]">
+                <span class="text-slate-400 flex items-center gap-1">
+                    <i data-lucide="scissors" class="w-3 h-3 text-sky-400"></i> タスク分解眼
+                </span>
+                <span id="stat-decompose" class="font-bold text-sky-300 font-mono">10</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div id="bar-decompose" class="bg-gradient-to-r from-sky-500 to-blue-400 h-full transition-all duration-500" style="width: 15%;"></div>
+            </div>
+        </div>
+
+        <!-- ととのい度 -->
+        <div class="space-y-1">
+            <div class="flex justify-between items-center text-[11px]">
+                <span class="text-slate-400 flex items-center gap-1">
+                    <i data-lucide="sparkles" class="w-3 h-3 text-amber-400"></i> ととのい度
+                </span>
+                <span id="stat-energy" class="font-bold text-amber-300 font-mono">100</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div id="bar-energy" class="bg-gradient-to-r from-amber-500 to-rose-400 h-full transition-all duration-500" style="width: 100%;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chapter Navigation Tabs -->
+    <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
+        <button id="tab-chap-1" onclick="switchChapter(1)" class="px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-sky-500/20 text-sky-300 border border-sky-400/40">
+            第一幕: 側坐核と5秒着火
+        </button>
+        <button id="tab-chap-2" onclick="switchChapter(2)" class="px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-slate-800 text-slate-400 border border-slate-700">
+            第二幕: タスク分解の錬金術
+        </button>
+        <button id="tab-chap-3" onclick="switchChapter(3)" class="px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-slate-800 text-slate-400 border border-slate-700">
+            第三幕: 質より量の乱打スパート
+        </button>
+        <button id="tab-chap-4" onclick="switchChapter(4)" class="px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-slate-800 text-slate-400 border border-slate-700">
+            第四幕: 4:30起床と前夜仕込み
+        </button>
+        <button id="tab-chap-5" onclick="switchChapter(5)" class="px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-slate-800 text-slate-400 border border-slate-700">
+            第五幕: サウナ交代浴と免許皆伝
+        </button>
+    </div>
+
+    <section class="bg-slate-900/90 border border-slate-800 rounded-3xl p-3 sm:p-5 flex-1 flex flex-col justify-between backdrop-blur-md relative overflow-hidden min-h-[490px] shadow-2xl">
+        
+        <!-- Live Screen Layout (Top half: Live Feed & Dialogue / Bottom half: Interactive Area & Player choices) -->
+        <div class="flex flex-col lg:flex-row gap-4 items-stretch z-10">
+
+            <!-- REALISTIC DUAL ADVISOR BROADCAST FEED WITH LIP-SYNC -->
+            <div class="lg:w-5/12 w-full flex flex-col">
+                <div id="video-box" class="video-container relative aspect-[16/10] sm:aspect-[16/9] w-full border border-slate-700/80 shadow-2xl bg-black group cursor-pointer" onclick="triggerFileInput()" title="クリックまたは画像・動画(MP4)をドラッグ＆ドロップで差し替え可能">
+                    
+                    <!-- Viewport wrapper that handles camera zooming & head movement -->
+                    <div id="stream-viewport" class="stream-viewport cam-focus-male">
+                        <!-- Video Stream Element (Defaulting to matsuda.mp4 with auto fallback to photo) -->
+                        <video id="advisor-live-video"
+                               src="matsuda.mp4"
+                               class="advisor-feed-img"
+                               loop muted playsinline preload="auto"
+                               autoplay
+                               onerror="handleDefaultVideoError()"></video>
+
+                        <!-- Photo Stream Image (Fallback if matsuda.mp4 is not present) -->
+                        <img id="advisor-live-img"
+                             src="watermarked_img_15793579457143670156.jpg"
+                             alt="朝メソッド 二人顧問スタジオ実写中継"
+                             class="advisor-feed-img hidden"
+                             onerror="tryNextImageCandidate(this)" />
+
+                        <!-- Real-time Lip-Sync Canvas Layer -->
+                        <canvas id="mouth-canvas"></canvas>
+                    </div>
+
+                    <!-- Scanline texture for authentic monitor feel -->
+                    <div class="absolute inset-0 scanlines"></div>
+
+                    <!-- Hidden file input for uploading photo or video directly -->
+                    <input type="file" id="photo-upload-input" accept="image/*,video/*" class="hidden" onchange="handleManualPhotoUpload(event)">
+
+                    <!-- Live feed UI overlays -->
+                    <div class="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-black/75 backdrop-blur-md border border-white/10 text-[10px] text-slate-300 pointer-events-none z-20">
+                        <span id="stream-cam-label" class="text-sky-400 font-bold">CAM 1: 男性顧問</span>
+                        <span class="text-slate-500">|</span>
+                        <span id="media-type-badge" class="font-mono text-[9px] text-amber-300">VIDEO STREAM (matsuda.mp4)</span>
+                    </div>
+
+                    <div class="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-lg bg-black/75 backdrop-blur-md border border-white/10 pointer-events-none z-20">
+                        <!-- Simulated Live Waveform -->
+                        <div class="flex items-center gap-0.5 h-3">
+                            <span class="voice-bar h-1" id="v-bar-1"></span>
+                            <span class="voice-bar h-2" id="v-bar-2"></span>
+                            <span class="voice-bar h-3" id="v-bar-3"></span>
+                            <span class="voice-bar h-1.5" id="v-bar-4"></span>
+                        </div>
+                        <span id="speaker-mic-name" class="text-[10px] font-bold text-sky-300 font-mono ml-1">MIC ON</span>
+                    </div>
+
+                    <!-- Bottom Bar of Video: Advisor Role Tags -->
+                    <div class="absolute bottom-2 inset-x-2 flex items-center justify-between pointer-events-none z-20">
+                        <div id="live-speaker-card" class="px-2.5 py-1 rounded-xl bg-slate-900/90 backdrop-blur-md border border-amber-400/40 text-xs font-bold text-amber-200 flex items-center gap-1.5 shadow-lg">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                            <span id="live-speaker-name">顧問（先生）</span>
+                        </div>
+                        <div class="flex items-center gap-1 pointer-events-auto" onclick="event.stopPropagation()">
+                            <button onclick="setCameraView('male')" class="px-2 py-0.5 rounded bg-black/80 hover:bg-slate-800 text-[10px] text-slate-300 border border-slate-700 transition" title="男性顧問にフォーカス">顧問</button>
+                            <button onclick="setCameraView('female')" class="px-2 py-0.5 rounded bg-black/80 hover:bg-slate-800 text-[10px] text-slate-300 border border-slate-700 transition" title="パートナー顧問にフォーカス">パートナー</button>
+                            <button onclick="setCameraView('wide')" class="px-2 py-0.5 rounded bg-black/80 hover:bg-slate-800 text-[10px] text-slate-300 border border-slate-700 transition" title="全体を写す">全体</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advisor commentary quick note -->
+                <div class="mt-2 px-3 py-1.5 bg-slate-950/60 rounded-xl border border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                    <span class="truncate flex items-center gap-1.5">
+                        <i data-lucide="tv" class="w-3.5 h-3.5 text-sky-400"></i>
+                        <span id="stream-subtext">発言に合わせて口元が動きます（歯車で位置微調整可）</span>
+                    </span>
+                    <button onclick="pokeAdvisors()" class="text-amber-400 hover:text-amber-300 text-[10px] shrink-0 font-bold ml-1">👋 会釈する</button>
+                </div>
+            </div>
+
+            <!-- Dialogue Speech Bubble Display -->
+            <div class="lg:w-7/12 w-full bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-inner relative">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-700/70 pb-2 mb-2">
+                        <span id="speaker-title-badge" class="text-xs font-bold text-amber-300 flex items-center gap-1.5 font-serif-title">
+                            <i data-lucide="sparkle" class="w-3.5 h-3.5 text-amber-400"></i>
+                            <span>顧問（先生）の発言</span>
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-mono">Asa Atelier • 04:30 AM</span>
+                    </div>
+<!-- 動画化手順・ガイドモーダル -->
+<div id="modal-video-guide" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-slate-900 border border-purple-500/40 rounded-3xl p-5 sm:p-6 max-w-xl w-full shadow-2xl relative max-h-[88vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center">
+                    <i data-lucide="film" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-white font-serif-title">二人顧問の「実写動画化」完全手順</h3>
+                    <p class="text-[10px] text-purple-300">静止画写真からAI動画を作成し、本アプリで再生するステップ</p>
+                </div>
+            </div>
+            <button onclick="closeModal('modal-video-guide')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto space-y-3.5 pr-1 text-xs text-slate-300 leading-relaxed">
+            <!-- STEP 1 -->
+            <div class="p-3.5 bg-slate-800/80 rounded-2xl border border-slate-700/80">
+                <div class="flex items-center gap-2 font-bold text-purple-300 mb-1.5">
+                    <span class="w-5 h-5 rounded-md bg-purple-500/20 flex items-center justify-center text-[11px] font-mono">1</span>
+                    <span>AI動画生成ツールで静止画を動画化する（おすすめツール）</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mb-2">
+                    お手元の写真をアップロードし、表情や首振りを自然に動かす動画（MP4形式）を作成します。
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                    <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-700">
+                        <span class="text-amber-300 font-bold block mb-0.5">① LivePortrait（イチオシ・自然）</span>
+                        <span class="text-slate-400 block text-[10px]">
+                            Hugging Face等の無料デモで利用可能。写真の顔立ちを崩さずに、自然な瞬き・呼吸・目線の動き・会話の動きを再現できます。
+                        </span>
+                    </div>
+                    <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-700">
+                        <span class="text-sky-300 font-bold block mb-0.5">② Kling AI / Runway Gen-3</span>
+                        <span class="text-slate-400 block text-[10px]">
+                            「Image to Video」機能で写真を投入。「二人がパソコンの前で静かに呼吸し、時折頷いて話している」とプロンプトを入力して5〜10秒のループ動画を生成。
+                        </span>
+                    </div>
+                    <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-700">
+                        <span class="text-emerald-300 font-bold block mb-0.5">③ Hedra / HeyGen（音声同期）</span>
+                        <span class="text-slate-400 block text-[10px]">
+                            セリフ音声を読み込ませて、完全に口元と顔全体が連動して喋る動画を直接書き出せます。
+                        </span>
+                    </div>
+                    <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-700">
+                        <span class="text-rose-300 font-bold block mb-0.5">④ 実際の録画映像を使う場合</span>
+                        <span class="text-slate-400 block text-[10px]">
+                            Zoomやスマートフォンで撮影したお二人の動画（.mp4 / .webm）をそのまま使用することも可能です。
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="p-3.5 bg-slate-800/80 rounded-2xl border border-slate-700/80">
+                <div class="flex items-center gap-2 font-bold text-sky-300 mb-1.5">
+                    <span class="w-5 h-5 rounded-md bg-sky-500/20 flex items-center justify-center text-[11px] font-mono">2</span>
+                    <span>生成した動画ファイル（.mp4）をゲームに読み込ませる</span>
+                </div>
+                <p class="text-[11px] text-slate-300 mb-2">
+                    本アプリのモニター枠は<strong>動画ファイル（MP4 / WebM）に完全対応</strong>しています。
+                </p>
+                <div class="space-y-1.5 text-[11px] text-slate-400 bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/60">
+                    <div class="flex items-start gap-1.5">
+                        <span class="text-sky-400 font-bold">・</span>
+                        <span><strong>ドラッグ＆ドロップ</strong>：書き出した `.mp4` ファイルを画面のビデオ枠にそのまま投げ込むだけで、即座に動画ストリームとして再生されます。</span>
+                    </div>
+                    <div class="flex items-start gap-1.5">
+                        <span class="text-sky-400 font-bold">・</span>
+                        <span><strong>クリックして選択</strong>：ビデオ枠をクリックして `.mp4` ファイルを選択してもOKです。</span>
+                    </div>
+                    <div class="flex items-start gap-1.5">
+                        <span class="text-sky-400 font-bold">・</span>
+                        <span>動画再生中も、カメラズーム（先生・パートナー・全景）や修練ミニゲーム、音声同期がすべて連動します。</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div class="p-3.5 bg-slate-800/80 rounded-2xl border border-slate-700/80">
+                <div class="flex items-center gap-2 font-bold text-emerald-300 mb-1.5">
+                    <span class="w-5 h-5 rounded-md bg-emerald-500/20 flex items-center justify-center text-[11px] font-mono">3</span>
+                    <span>HTMLコード内に恒久的に埋め込む場合（永続化）</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mb-1.5">
+                    ドラッグ＆ドロップではなく、HTMLファイルを開いた時点で最初から動画を自動再生させたい場合は、HTML内の `<video>` タグにファイル名を直接指定します：
+                </p>
+                <div class="bg-black/80 p-2.5 rounded-xl font-mono text-[10px] text-emerald-300 border border-slate-700 overflow-x-auto">
+                    &lt;video id="advisor-live-video" src="advisor_video.mp4" loop muted playsinline autoplay&gt;&lt;/video&gt;
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">
+                    ※ HTMLファイルと同じフォルダ内に `advisor_video.mp4` を置いて保存すれば、開くだけで常時動画が流れます。
+                </p>
+            </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-between mt-2">
+            <span class="text-[10px] text-slate-400">現在のお手持ちの動画を今すぐ試せます</span>
+            <button onclick="closeModal('modal-video-guide')" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs transition font-semibold">
+                ガイドを閉じる
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 金言手帳モーダル -->
+<div id="modal-notebook" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-amber-400/30 rounded-3xl p-5 max-w-lg w-full shadow-2xl relative max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                    <i data-lucide="book-open" class="w-4 h-4"></i>
+                </div>
+                <h3 class="text-sm sm:text-base font-bold text-white font-serif-title">二人顧問の朝メソッド金言録</h3>
+            </div>
+            <button onclick="closeModal('modal-notebook')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <p class="text-xs text-slate-400 mb-3">
+            写実的なお二人とのセッションを通じて授かった、一生役立つ朝の創作と思考のメソッドです。
+        </p>
+
+        <div id="notebook-list" class="flex-1 overflow-y-auto space-y-2.5 pr-1">
+            <!-- Dynamic Notebook List -->
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 text-right mt-2">
+            <button onclick="closeModal('modal-notebook')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs transition font-semibold">
+                手帳を閉じる
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 二人顧問の相談室モーダル -->
+<div id="modal-consult" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-sky-400/30 rounded-3xl p-5 max-w-lg w-full shadow-2xl relative">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-xl bg-sky-500/20 text-sky-300 flex items-center justify-center">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                </div>
+                <h3 class="text-sm sm:text-base font-bold text-white font-serif-title">二人顧問のオンライン相談室</h3>
+            </div>
+            <button onclick="closeModal('modal-consult')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <p class="text-xs text-slate-300 mb-3">
+            今、あなたが創作や朝の習慣でぶつかっている悩みは何ですか？お二人が画面越しに掛け合いで直接答えてくれます。
+        </p>
+
+        <div class="space-y-3">
+            <div>
+                <label class="text-[11px] text-slate-400 block mb-1">お悩みテーマを選択：</label>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button onclick="pickConsultTopic('early_wake')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left text-slate-200">
+                        ⏰ どうしても二度寝・朝起きられない
+                    </button>
+                    <button onclick="pickConsultTopic('lazy_start')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left text-slate-200">
+                        😩 めんどくさくて着手できない
+                    </button>
+                    <button onclick="pickConsultTopic('too_big')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left text-slate-200">
+                        🏔️ タスクが重すぎて頭がフリーズ
+                    </button>
+                    <button onclick="pickConsultTopic('quality_trap')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left text-slate-200">
+                        🎨 完璧主義で筆が進まない
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[11px] text-slate-400 block mb-1">または自由に入力（ひとこと）：</label>
+                <div class="flex gap-2">
+                    <input id="input-custom-consult" type="text" placeholder="例: 締め切り前日にパニックになる" class="flex-1 px-3 py-2 bg-slate-800 rounded-xl border border-slate-700 text-xs text-white focus:outline-none focus:border-sky-400">
+                    <button onclick="submitCustomConsult()" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold">相談する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+class DojoAudio {
+    constructor() {
+        this.ctx = null;
+        this.enabled = true;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    playTone(freq, type = 'sine', duration = 0.2, gainLevel = 0.12) {
+        if (!this.enabled) return;
+        this.init();
+        try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(gainLevel, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+    }
+
+    // Voice tick matching male / female pitch
+    playSpeakerVoiceTick(speakerType) {
+        if (!this.enabled) return;
+        this.init();
+        // Male Sensei: deeper authoritative warmth (180-260Hz)
+        // Female Partner: lively clear clarity (380-520Hz)
+        const baseFreq = speakerType === 'male' ? (190 + Math.random() * 60) : (420 + Math.random() * 110);
+        this.playTone(baseFreq, speakerType === 'male' ? 'triangle' : 'sine', 0.045, 0.04);
+    }
+
+    playZenBell() {
+        if (!this.enabled) return;
+        this.init();
+        const t = this.ctx.currentTime;
+        [528, 792, 1056].forEach((f, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, t);
+            gain.gain.setValueAtTime(0.07 / (i + 1), t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(t + 2.5);
+        });
+    }
+
+    playAwakeningChord() {
+        if (!this.enabled) return;
+        this.init();
+        const freqs = [440, 554.37, 659.25, 880];
+        freqs.forEach((f, i) => {
+            setTimeout(() => this.playTone(f, 'sine', 0.4, 0.09), i * 70);
+        });
+    }
+
+    playCamSwitch() {
+        if (!this.enabled) return;
+        this.init();
+        this.playTone(400, 'sine', 0.06, 0.08);
+        setTimeout(() => this.playTone(600, 'sine', 0.08, 0.08), 50);
+    }
+}
+
+const audio = new DojoAudio();
+
+function toggleSound() {
+    audio.enabled = !audio.enabled;
+    const label = document.getElementById('label-sound');
+    const icon = document.getElementById('icon-sound');
+    if (audio.enabled) {
+        audio.init();
+        label.innerText = '音: ON';
+        icon.setAttribute('data-lucide', 'volume-2');
+        audio.playTone(580, 'sine', 0.1, 0.1);
+    } else {
+        label.innerText = '音: OFF';
+        icon.setAttribute('data-lucide', 'volume-x');
+    }
+    lucide.createIcons();
+}
+</script>
+
+<script>
+/* ==========================================================================
+   リアルタイム・リップシンク（口元アニメーション）エンジン
+   ========================================================================== */
+
+// お二人の口元座標設定（パーセンテージ指定 0.0〜1.0）
+const mouthConfig = {
+    male: {
+        x: 0.510, // 顧問（先生）の口中心 X
+        y: 0.460, // 顧問（先生）の口中心 Y
+        w: 0.052, // 口の幅比率
+        h: 0.024, // 口の高さ比率
+        skinTone: '#cb8e76',
+        innerColor: '#431918'
+    },
+    female: {
+        x: 0.320, // パートナー顧問（左奥メガネ）の口中心 X
+        y: 0.590, // パートナー顧問の口中心 Y
+        w: 0.042, // 口の幅比率
+        h: 0.019, // 口の高さ比率
+        skinTone: '#c78d78',
+        innerColor: '#481919'
+    },
+    lipScale: 1.0 // 開閉の強調倍率
+};
+
+// リップシンクの状態管理
+const lipState = {
+    activeSpeaker: null, // 'male' | 'female' | null
+    mouthOpenAmount: 0,   // 0.0 (閉) 〜 1.0 (全開)
+    targetOpenAmount: 0,  // 目標開口度
+    mouthWidthStretch: 1, // 'い'の横伸び、'う'のすぼまり
+    rafId: null
+};
+
+// Canvas初期化とリサイズ対応
+let mouthCanvas = null;
+let mouthCtx = null;
+let liveImg = null;
+
+function initLipSyncEngine() {
+    mouthCanvas = document.getElementById('mouth-canvas');
+    liveImg = document.getElementById('advisor-live-img');
+    if (!mouthCanvas || !liveImg) return;
+
+    mouthCtx = mouthCanvas.getContext('2d');
+    resizeMouthCanvas();
+    window.addEventListener('resize', resizeMouthCanvas);
+    liveImg.addEventListener('load', resizeMouthCanvas);
+
+    // リップシンクの描画ループ開始
+    if (!lipState.rafId) {
+        lipState.rafId = requestAnimationFrame(lipSyncRenderLoop);
+    }
+}
+
+function resizeMouthCanvas() {
+    if (!mouthCanvas || !liveImg) return;
+    const rect = liveImg.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    mouthCanvas.width = (rect.width || 640) * dpr;
+    mouthCanvas.height = (rect.height || 360) * dpr;
+}
+
+// 連続描画ループ
+function lipSyncRenderLoop() {
+    // 開口度のスムーズな補間
+    lipState.mouthOpenAmount += (lipState.targetOpenAmount - lipState.mouthOpenAmount) * 0.35;
+
+    renderLipDeformation();
+    requestAnimationFrame(lipSyncRenderLoop);
+}
+
+// 口元キャンバスへの合成描画
+function renderLipDeformation() {
+    if (!mouthCtx || !mouthCanvas) return;
+    const cw = mouthCanvas.width;
+    const ch = mouthCanvas.height;
+
+    mouthCtx.clearRect(0, 0, cw, ch);
+
+    // 喋っているキャラクターがいる場合、かつ開口度が0より大きい時に描画
+    if (lipState.activeSpeaker && lipState.mouthOpenAmount > 0.03) {
+        const cfg = mouthConfig[lipState.activeSpeaker];
+        if (!cfg) return;
+
+        const cx = cfg.x * cw;
+        const cy = cfg.y * ch;
+        const baseW = cfg.w * cw * lipState.mouthWidthStretch;
+        const baseH = cfg.h * ch * (1 + lipState.mouthOpenAmount * 2.2 * mouthConfig.lipScale);
+
+        mouthCtx.save();
+
+        // 1. 口内腔（口を開けたときの暗がり・舌・奥歯）の自然なシャドウ描画
+        mouthCtx.beginPath();
+        mouthCtx.ellipse(cx, cy, baseW * 0.75, baseH * 0.85, 0, 0, Math.PI * 2);
+        
+        // グラデーション（上唇の影から口腔奥の暗がり）
+        const cavityGrad = mouthCtx.createRadialGradient(cx, cy - (baseH * 0.2), 2, cx, cy, baseW * 0.8);
+        cavityGrad.addColorStop(0, '#220808');
+        cavityGrad.addColorStop(0.6, '#3a1111');
+        cavityGrad.addColorStop(1, '#561a1a');
+        mouthCtx.fillStyle = cavityGrad;
+        mouthCtx.fill();
+
+        // 2. 歯（チラッと見える上歯のエッジ）
+        if (lipState.mouthOpenAmount > 0.3) {
+            mouthCtx.fillStyle = 'rgba(245, 240, 235, 0.75)';
+            mouthCtx.beginPath();
+            mouthCtx.rect(cx - baseW * 0.35, cy - baseH * 0.5, baseW * 0.7, baseH * 0.25);
+            mouthCtx.fill();
+        }
+
+        // 3. 舌（下唇の奥にのぞく淡いピンク）
+        if (lipState.mouthOpenAmount > 0.4) {
+            mouthCtx.fillStyle = 'rgba(180, 80, 80, 0.65)';
+            mouthCtx.beginPath();
+            mouthCtx.ellipse(cx, cy + baseH * 0.45, baseW * 0.4, baseH * 0.35, 0, 0, Math.PI);
+            mouthCtx.fill();
+        }
+
+        // 4. 自然な唇の境界（周囲の肌色となじませるソフトブレンド）
+        mouthCtx.strokeStyle = 'rgba(70, 25, 25, 0.5)';
+        mouthCtx.lineWidth = Math.max(1, cw * 0.002);
+        mouthCtx.stroke();
+
+        // 5. 下唇の光とハイライト（上下運動に合わせて顎の立体感を演出）
+        mouthCtx.beginPath();
+        mouthCtx.ellipse(cx, cy + baseH * 0.9, baseW * 0.6, baseH * 0.3, 0, 0, Math.PI);
+        mouthCtx.fillStyle = 'rgba(255, 225, 210, 0.25)';
+        mouthCtx.fill();
+
+        mouthCtx.restore();
+    }
+}
+
+// 文字入力や音声発声に合わせて口を開閉させるシグナル
+function triggerLipSyncPulse(speakerType, char) {
+    if (speakerType !== 'male' && speakerType !== 'female') return;
+    lipState.activeSpeaker = speakerType;
+
+    // 母音に応じた開口幅・形状の調整
+    let openDepth = 0.55 + Math.random() * 0.4;
+    let stretch = 1.0;
+
+    if (char) {
+        if ("あおアオ".includes(char)) {
+            openDepth = 0.95;
+            stretch = 1.05;
+        } else if ("いエいえ".includes(char)) {
+            openDepth = 0.5;
+            stretch = 1.35; // 横に広がる
+        } else if ("うオうお".includes(char)) {
+            openDepth = 0.65;
+            stretch = 0.75; // すぼまる
+        } else if ("、。！？\n ".includes(char)) {
+            openDepth = 0.0;
+        }
+    }
+
+    lipState.targetOpenAmount = openDepth;
+    lipState.mouthWidthStretch = stretch;
+
+    // 頭部微振動エフェクト
+    const viewport = document.getElementById('stream-viewport');
+    if (viewport && openDepth > 0.2) {
+        viewport.classList.add('head-speaking');
+    }
+
+    // 口パク音声発声
+    audio.playSpeakerVoiceTick(speakerType);
+    triggerWaveformPulse();
+
+    // わずかな時間差で自然に閉口へ向かう
+    setTimeout(() => {
+        lipState.targetOpenAmount = 0.05 + Math.random() * 0.15;
+    }, 90);
+}
+
+// 発言終了時に口を完全に閉じる
+function stopLipSync() {
+    lipState.targetOpenAmount = 0;
+    setTimeout(() => {
+        lipState.activeSpeaker = null;
+        const viewport = document.getElementById('stream-viewport');
+        if (viewport) viewport.classList.remove('head-speaking');
+    }, 150);
+}
+
+// 口元キャリブレーション調整用
+function updateMouthConfig() {
+    const maleX = parseFloat(document.getElementById('slider-male-x').value);
+    const maleY = parseFloat(document.getElementById('slider-male-y').value);
+    const femaleX = parseFloat(document.getElementById('slider-female-x').value);
+    const femaleY = parseFloat(document.getElementById('slider-female-y').value);
+    const scale = parseFloat(document.getElementById('slider-mouth-scale').value);
+
+    mouthConfig.male.x = maleX / 100;
+    mouthConfig.male.y = maleY / 100;
+    mouthConfig.female.x = femaleX / 100;
+    mouthConfig.female.y = femaleY / 100;
+    mouthConfig.lipScale = scale;
+
+    document.getElementById('val-male-x').innerText = `${maleX.toFixed(1)}%`;
+    document.getElementById('val-male-y').innerText = `${maleY.toFixed(1)}%`;
+    document.getElementById('val-female-x').innerText = `${femaleX.toFixed(1)}%`;
+    document.getElementById('val-female-y').innerText = `${femaleY.toFixed(1)}%`;
+}
+
+function testTalkMouth(speaker) {
+    setCameraView(speaker);
+    lipState.activeSpeaker = speaker;
+    let count = 0;
+    const testInt = setInterval(() => {
+        triggerLipSyncPulse(speaker, ['あ','い','う','え','お'][count % 5]);
+        count++;
+        if (count > 8) {
+            clearInterval(testInt);
+            stopLipSync();
+        }
+    }, 120);
+}
+
+function openCalibrationModal() {
+    document.getElementById('modal-calibration').classList.remove('hidden');
+    audio.playTone(480, 'triangle', 0.1, 0.1);
+}
+</script>
+
+<script>
+function triggerFileInput() {
+    const input = document.getElementById('photo-upload-input');
+    if (input) input.click();
+}
+
+function handleDefaultVideoError() {
+    // If matsuda.mp4 is not found yet in the current directory, gracefully fallback to image display
+    const vidEl = document.getElementById('advisor-live-video');
+    const imgEl = document.getElementById('advisor-live-img');
+    const badge = document.getElementById('media-type-badge');
+    if (vidEl && imgEl) {
+        vidEl.classList.add('hidden');
+        imgEl.classList.remove('hidden');
+        if (badge) badge.innerText = "PHOTO STREAM (matsuda.mp4 待機中)";
+        showAdvisorStreamNote("matsuda.mp4 が見つからないため静止画を表示中。同じフォルダに置くか動画を枠にドロップしてください。");
+    }
+}
+
+function handleManualPhotoUpload(event) {
+    const file = event.target.files && event.target.files[0];
+    if (file) {
+        applyMediaFile(file);
+    }
+}
+
+function applyMediaFile(file) {
+    const isVideo = file.type.startsWith('video/') || file.name.match(/\.(mp4|webm|mov|ogg)$/i);
+    const imgEl = document.getElementById('advisor-live-img');
+    const vidEl = document.getElementById('advisor-live-video');
+    const badge = document.getElementById('media-type-badge');
+
+    if (isVideo) {
+        // Switch to video stream
+        const videoUrl = URL.createObjectURL(file);
+        vidEl.src = videoUrl;
+        vidEl.classList.remove('hidden');
+        imgEl.classList.add('hidden');
+        vidEl.play().catch(() => {});
+        if (badge) badge.innerText = "VIDEO STREAM (MP4)";
+        showAdvisorStreamNote("動画をロードしました。セリフやカメラワークと連動して再生されます。");
+        audio.playAwakeningChord();
+        setTimeout(resizeMouthCanvas, 200);
+    } else {
+        // Switch to image stream
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imgEl.src = e.target.result;
+            imgEl.classList.remove('hidden');
+            vidEl.classList.add('hidden');
+            vidEl.pause();
+            if (badge) badge.innerText = "PHOTO STREAM";
+            showAdvisorStreamNote("写真をロードしました。リップシンクが適用されます。");
+            audio.playAwakeningChord();
+            setTimeout(resizeMouthCanvas, 200);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function showAdvisorStreamNote(msg) {
+    const el = document.getElementById('stream-subtext');
+    if (el) el.innerText = msg;
+}
+
+function openVideoGuideModal() {
+    document.getElementById('modal-video-guide').classList.remove('hidden');
+    audio.playTone(520, 'triangle', 0.12, 0.1);
+}
+
+// Drag & drop support on video box (supporting both image and video)
+function initDragAndDrop() {
+    const box = document.getElementById('video-box');
+    if (!box) return;
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        box.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            box.classList.add('drag-highlight');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        box.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            box.classList.remove('drag-highlight');
+        }, false);
+    });
+
+    box.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const file = dt.files && dt.files[0];
+        if (file) {
+            applyMediaFile(file);
+        }
+    }, false);
+}
+
+// Camera pan & focus controller
+function setCameraView(target) {
+    const viewport = document.getElementById('stream-viewport');
+    const camLabel = document.getElementById('stream-cam-label');
+    const speakerCard = document.getElementById('live-speaker-card');
+    const speakerName = document.getElementById('live-speaker-name');
+    const micName = document.getElementById('speaker-mic-name');
+    const vidEl = document.getElementById('advisor-live-video');
+
+    viewport.classList.remove('cam-focus-male', 'cam-focus-female', 'cam-focus-wide');
+
+    if (target === 'male') {
+        viewport.classList.add('cam-focus-male');
+        camLabel.innerText = 'CAM 1: 男性顧問 (Close-up)';
+        speakerCard.className = "px-2.5 py-1 rounded-xl bg-slate-900/90 backdrop-blur-md border border-amber-400/40 text-xs font-bold text-amber-200 flex items-center gap-1.5 shadow-lg";
+        speakerName.innerText = "顧問（先生）";
+        micName.innerText = "SENSEI MIC";
+    } else if (target === 'female') {
+        viewport.classList.add('cam-focus-female');
+        camLabel.innerText = 'CAM 2: パートナー顧問 (Close-up)';
+        speakerCard.className = "px-2.5 py-1 rounded-xl bg-slate-900/90 backdrop-blur-md border border-sky-400/40 text-xs font-bold text-sky-200 flex items-center gap-1.5 shadow-lg";
+        speakerName.innerText = "パートナー顧問";
+        micName.innerText = "PARTNER MIC";
+    } else {
+        viewport.classList.add('cam-focus-wide');
+        camLabel.innerText = 'CAM 3: スタジオ全景 (Wide)';
+        speakerCard.className = "px-2.5 py-1 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-500/40 text-xs font-bold text-slate-200 flex items-center gap-1.5 shadow-lg";
+        speakerName.innerText = "二人顧問";
+        micName.innerText = "STUDIO ALL";
+    }
+
+    if (vidEl && !vidEl.classList.contains('hidden') && vidEl.paused) {
+        vidEl.play().catch(() => {});
+    }
+
+    audio.playCamSwitch();
+    triggerWaveformPulse();
+    setTimeout(resizeMouthCanvas, 150);
+}
+
+// Voice waveform simulated animation
+function triggerWaveformPulse() {
+    const b1 = document.getElementById('v-bar-1');
+    const b2 = document.getElementById('v-bar-2');
+    const b3 = document.getElementById('v-bar-3');
+    const b4 = document.getElementById('v-bar-4');
+    if (!b1) return;
+
+    let ticks = 0;
+    const waveInt = setInterval(() => {
+        b1.style.height = `${4 + Math.random() * 12}px`;
+        b2.style.height = `${4 + Math.random() * 16}px`;
+        b3.style.height = `${4 + Math.random() * 14}px`;
+        b4.style.height = `${4 + Math.random() * 10}px`;
+        ticks++;
+        if (ticks > 8) {
+            clearInterval(waveInt);
+            b1.style.height = '4px';
+            b2.style.height = '8px';
+            b3.style.height = '12px';
+            b4.style.height = '6px';
+        }
+    }, 60);
+}
+</script>
+
+<script>
+const METHOD_ARCHIVE = [
+    {
+        id: "m_accumbens",
+        title: "側坐核は『動いてから』しか発火しない",
+        body: "『やる気が出たら机に向かう』は生理学的に不可能。やる気の源泉である側坐核は、手先を動かしたり立ち上がったりする物理刺激を受けて初めて作動する。5秒間だけでいい、まず物理的に動くこと。",
+        unlocked: false
+    },
+    {
+        id: "m_task_fault",
+        title: "あなたが悪いのではない、タスクが悪い",
+        body: "『マンガを描く』『デザインを仕上げる』のような巨大タスクは脳が脅威と感じてフリーズする。手が進まない時は自分を責めず、タスクを20分で終わる『線の1本』『ノートを開く』に刻み直せ。",
+        unlocked: false
+    },
+    {
+        id: "m_fixed_wake",
+        title: "何時に寝ようと『朝4:30固定起床』",
+        body: "睡眠不足は翌朝に寝坊して取り返すのではなく、その日の夜に早く寝ることで調整する。起きる時間を固定することで体内時計がロックされ、朝の静寂という最高の執筆時間が手に入る。",
+        unlocked: false
+    },
+    {
+        id: "m_quantity_first",
+        title: "質は『圧倒的な量』の副産物に過ぎない",
+        body: "最初から傑作を作ろうとすると1文字も書けなくなる。駄作を山のように生み落とすことを自分に許す。量は質を担保し、質は量の果てにしか宿らない。",
+        unlocked: false
+    },
+    {
+        id: "m_sauna_reset",
+        title: "夕方の温冷交代浴と『三上のひらめき』",
+        body: "起床11時間後のサウナ・水風呂・外気浴。机にしがみつくのをやめ、ぼんやりした瞬間に脳のデフォルト・モード・ネットワークが起動し、絡まったアイデアが一本に繋がる。",
+        unlocked: false
+    },
+    {
+        id: "m_eve_preparation",
+        title: "前夜の仕込み：朝一番のファーストステップを机に置け",
+        body: "朝起きて『何からやろうか』と考えてはいけない。前夜にノートを広げ、最初の行に鉛筆を置いて寝る。朝起きたら思考ゼロでそのまま手を滑らせるのだ。",
+        unlocked: false
+    }
+];
+
+let playerStats = {
+    dantan: 15,
+    decompose: 10,
+    energy: 100,
+    currentChapter: 1,
+    currentStep: 0
+};
+
+const SCENARIO_CHAPTERS = {
+    1: {
+        title: "第一幕: 側坐核と5秒着火",
+        steps: [
+            {
+                speaker: "male", // 顧問（先生）
+                text: "やあ、画面越しによく来てくれたね。\n君が『朝起きて創りたいのに、どうしても布団から出られない』『机に向かうのが億劫でスマホを見ちゃう』と悩んでいるって聞いたよ。\n\nまず聞かせてほしい。朝、創作に取り掛かれない時……君は自分の心の中で何が起きていると思っているかい？",
+                note: "「朝メソッド」は精神論ではなく、脳の構造に従う科学である。",
+                choices: [
+                    {
+                        text: "「自分の根気ややる気が足りないからだと思います…」",
+                        dantan: 0,
+                        decompose: 5,
+                        next: 1
+                    },
+                    {
+                        text: "「めんどくさいという感情が強すぎて、勝てないんです」",
+                        dantan: 5,
+                        decompose: 0,
+                        next: 1
+                    }
+                ]
+            },
+            {
+                speaker: "female", // パートナー顧問
+                text: "ふふ、先生、またみんな自分を責めちゃってますよ。\nいい？自分を責める必要は1ミリもないの。\n脳の『側坐核』っていうやる気スイッチはね、考える前に行動しないと絶対に着火しない仕組みになってるの。だから『やる気が出たらやる』なんて日は一生来ないのよ。",
+                note: "パートナー顧問の補足：やる気は「行動の後」にしか分泌されない。",
+                choices: [
+                    {
+                        text: "「頭で考えているうちに、どんどん億劫になるんですね」",
+                        dantan: 10,
+                        decompose: 5,
+                        next: 2
+                    },
+                    {
+                        text: "「じゃあ、めんどくさいと思った時はどうすれば…？」",
+                        dantan: 5,
+                        decompose: 5,
+                        next: 2
+                    }
+                ]
+            },
+            {
+                speaker: "male", // 顧問（先生）
+                text: "そこで使うのが【5秒着火の儀】だ！\n『あ、めんどくさいな』と脳が言い訳を始める前の5秒間。何も考えずに指を動かすか、机の前に座る。\n\nさあ、二人の目の前で5秒間、画面のボタンを長押しして『最初の着火』をやってごらん。理屈ではなく身体で覚えるんだ！",
+                note: "ミニ修練：5秒間ホールドして側坐核を強制起動させよ。",
+                interactive: "five_sec_hold",
+                choices: []
+            },
+            {
+                speaker: "female", // パートナー顧問
+                text: "はい、ナイス着火！\nほら、指先を長押しした瞬間、頭の中のモヤモヤが『作業モード』に切り替わった感覚があったでしょ？\nめんどくささと真っ向勝負しちゃダメ。5秒でスルーして手を動かすのが正解よ。",
+                note: "金言獲得: 【側坐核は動いてからしか発火しない】",
+                unlockMethod: "m_accumbens",
+                choices: [
+                    {
+                        text: "「身体が少し軽くなりました。第二幕へ進みたいです！」",
+                        dantan: 10,
+                        decompose: 10,
+                        nextChapter: 2
+                    }
+                ]
+            }
+        ]
+    },
+    2: {
+        title: "第二幕: タスク分解の錬金術",
+        steps: [
+            {
+                speaker: "female", // パートナー顧問
+                text: "第二幕は、創作者が一番挫折しやすいトラップよ。\n『タスクの巨大化問題』。\n君、ToDoリストやカレンダーに『ネームを仕上げる』とか『イラスト完成』って大雑把に書いてない？",
+                note: "抽象的な大タスクは脳にとって「猛獣の襲撃」と同じ恐怖になる。",
+                choices: [
+                    {
+                        text: "「まさに『第1話完成』とか大きく書いて気合入れてます…」",
+                        dantan: 0,
+                        decompose: 0,
+                        next: 1
+                    },
+                    {
+                        text: "「大雑把に書いたほうがやる気が出ると思ってました」",
+                        dantan: 0,
+                        decompose: 5,
+                        next: 1
+                    }
+                ]
+            },
+            {
+                speaker: "male", // 顧問（先生）
+                text: "それだよ！『ネームを仕上げる』なんてタスクは、脳からすれば『エベレストに今すぐ登れ』と言われているようなものだ。フリーズして逃げたくなるのは当たり前なんだよ。\n\n『できないのは君がダメなのではなく、タスクの分解が甘いだけ』。\nすべてのタスクは【20分以内で終わる極小のアクション】に刻み落とさなければならないんだ。",
+                note: "20分で終わらないタスクはタスクではない。ただの願望だ。",
+                choices: [
+                    {
+                        text: "「タスクを刻む…？具体的にはどうやって？」",
+                        dantan: 5,
+                        decompose: 10,
+                        next: 2
+                    }
+                ]
+            },
+            {
+                speaker: "female", // パートナー顧問
+                text: "ここに大きな岩のようなタスク【短編マンガのプロット完成】があるわ。\nこれを二人と一緒に、実行可能な『極小タスクカード』に刻み直してみましょ。\n下のカード群から『正しい20分極小ステップ』を3つ選んで並べてみて！",
+                note: "ミニ修練：タスク分解パズルを解け。",
+                interactive: "decompose_puzzle",
+                choices: []
+            },
+            {
+                speaker: "male", // 顧問（先生）
+                text: "素晴らしい分解眼だ！\n『主人公の欲望を1行メモ』『コマ枠を3つ引く』……これなら、どんなに眠くても、やる気がゼロでも淡々と手が進むだろう？\n『タスクを責めろ、自分を責めるな』。これを肝に銘じておくれ。",
+                note: "金言獲得: 【あなたが悪いのではない、タスクが悪い】",
+                unlockMethod: "m_task_fault",
+                choices: [
+                    {
+                        text: "「肩の荷が降りました。これなら毎朝進められます！」",
+                        dantan: 15,
+                        decompose: 15,
+                        nextChapter: 3
+                    }
+                ]
+            }
+        ]
+    },
+    3: {
+        title: "第三幕: 質より量の千本ノック",
+        steps: [
+            {
+                speaker: "male", // 顧問（先生）
+                text: "第三幕は『完璧主義の罠』についてだ。\n創作者ほど『いいものを描かなければ』『神プロットを思いつかなければ』と構えて、真っ白な原稿の前で固まってしまう。\n\n君はどうだい？最初の一行やラフを描くとき、手が止まってしまわないかい？",
+                note: "完璧主義とは、作品を愛しているのではなく失敗を恐れている状態である。",
+                choices: [
+                    {
+                        text: "「下手なものを描くのが怖くて、ずっと悩んでしまいます…」",
+                        dantan: 5,
+                        decompose: 5,
+                        next: 1
+                    },
+                    {
+                        text: "「駄作になったら時間が無駄になる気がして…」",
+                        dantan: 0,
+                        decompose: 5,
+                        next: 1
+                    }
+                ]
+            },
+            {
+                speaker: "female", // パートナー顧問
+                text: "ちょっと先生、ビシッと言ってあげて！\n質なんてね、『圧倒的な量の廃棄物』の山の上にしか咲かない花なのよ。\n最初から傑作を書こうなんて10年早いわ。まずは『世界一くだらない落書き』を100個生み出す覚悟を持つの。",
+                note: "パートナー顧問の喝：駄作を山ほど愛しなさい。",
+                choices: [
+                    {
+                        text: "「駄作でいい…そう思うと急に気が楽になりますね」",
+                        dantan: 15,
+                        decompose: 5,
+                        next: 2
+                    }
+                ]
+            },
+            {
+                speaker: "male", // 顧問（先生）
+                text: "さあ、実践だ！\n今から10秒間、頭に浮かんだくだらないアイデアの種を、ボタン連打でどんどん吐き出してみてごらん。\n質は問わない。とにかく『量を叩き出す』快感を指に刻み込むんだ！",
+                note: "ミニ修練：制限時間内にアイデアの種を乱打生成せよ。",
+                interactive: "idea_spurt",
+                choices: []
+            },
+            {
+                speaker: "female", // パートナー顧問
+                text: "ふふ、いい連打だったわよ！\nほら、その中にも1つか2つ、磨けば光りそうな面白い歪み（ひらめき）が混ざってる。\n創作者の仕事は『検閲すること』じゃなくて『産み落とすこと』なのよ。",
+                note: "金言獲得: 【質は圧倒的な量の副産物に過ぎない】",
+                unlockMethod: "m_quantity_first",
+                choices: [
+                    {
+                        text: "「躊躇なくアウトプットする感覚が掴めました！」",
+                        dantan: 15,
+                        decompose: 10,
+                        nextChapter: 4
+                    }
+                ]
+            }
+        ]
+    },
+    4: {
+        title: "第四幕: 起床固定と前夜の仕込み",
+        steps: [
+            {
+                speaker: "female", // パートナー顧問
+                text: "さあ、いよいよ朝メソッドの骨格部分ね。\n『朝4:30固定起床』と『前夜の仕込み』。\n君、夜更かししちゃった翌朝ってどうしてる？",
+                note: "起床時間をずらすと体内時計のリズムは崩壊する。",
+                choices: [
+                    {
+                        text: "「寝坊して、睡眠時間を取り戻そうとします」",
+                        dantan: 0,
+                        decompose: 0,
+                        next: 1
+                    },
+                    {
+                        text: "「目覚ましを何重にもかけて格闘します」",
+                        dantan: 5,
+                        decompose: 0,
+                        next: 1
+                    }
+                ]
+            },
+            {
+                speaker: "male", // 顧問（先生）
+                text: "それが一番の落とし穴なんだ。\n朝メソッドの鉄則は【何時に寝ようと、起きる時間は4:30固定】。\n睡眠不足は翌朝に寝坊して取り戻すのではなく、その日の夜に21:30に寝て取り戻すんだ。\n\nそしてもう一つ。朝起きて『何からやろうか』と考えてはいけない。前夜に机の上にノートを開き、最初の行に鉛筆を置いて寝るのだよ。",
+                note: "前夜の仕込みがあれば、朝起きて脳はアイドリング不要で滑り出す。",
+                choices: [
+                    {
+                        text: "「前夜に机の上に最初のアクションを置いておく…！」",
+                        dantan: 15,
+                        decompose: 10,
+                        next: 2
+                    }
+                ]
+            },
+            {
+                speaker: "female", // パートナー顧問
+                text: "明日の朝、あなたが起きた瞬間に迷わず着手する『最初の1アクション』を決めて、机にセットしてみましょ。\n下の入力欄から選ぶか、書き込んでみて！",
+                note: "ミニ修練：明朝4:30のファーストステップを仕込め。",
+                interactive: "eve_prep",
+                choices: []
+            },
+            {
+                speaker: "male", // 顧問（先生）
+                text: "よし！これで明朝の君は、起きた瞬間に思考ゼロで滑り出せる。\n前夜の自分が、明朝の自分をエスコートするんだよ。",
+                note: "金言獲得: 【何時に寝ようと朝4:30固定起床】【前夜の仕込み】",
+                unlockMethod: "m_fixed_wake",
+                unlockMethod2: "m_eve_preparation",
+                choices: [
+                    {
+                        text: "「明日の朝が楽しみになりました。最終幕へ！」",
+                        dantan: 20,
+                        decompose: 15,
+                        nextChapter: 5
+                    }
+                ]
+            }
+        ]
+    },
+    5: {
+        title: "第五幕: サウナ休息と免許皆伝",
+        steps: [
+            {
+                speaker: "male", // 顧問（先生）
+                text: "ついに最終幕だ。\n朝4:30に起きて淡々と創り、昼に作業をこなす。そうするとね、起床11時間後の午後3時〜4時頃に脳が限界を迎える。\n『もう何も思いつかない、疲れた』……そんな時、机にしがみついてはいけないよ。",
+                note: "机にしがみついても生乾きの雑巾を絞るようなものだ。",
+                choices: [
+                    {
+                        text: "「気合で夜中まで机にかじりつくのをやめます！」",
+                        dantan: 15,
+                        decompose: 10,
+                        next: 1
+                    }
+                ]
+            },
+            {
+                speaker: "female", // パートナー顧問
+                text: "そう！そこでサウナ・温冷交代浴の出番よ。\n熱気で雑念を飛ばし、水風呂で冷却し、外気浴で風に吹かれる。\nアイデアは机の前じゃなく『三上（枕上・鞍上・廁上）』……つまりぼんやり脱力した瞬間に繋がるのよ。\n\nさあ、道場奥の外気浴スペースで深呼吸して、脳をデフラグしましょ！",
+                note: "ミニ修練：ととのい深呼吸同期体験。",
+                interactive: "sauna_zen",
+                choices: []
+            },
+            {
+                speaker: "male", // 顧問（先生）
+                text: "ふう……頭の霧が晴れて、心身が透き通ったようだね。\nこれで君は、朝メソッドのすべての修練を修めた。\n完璧を目指すな。崩れたら、また明日の朝4:30に淡々と机の前に座ればいい。『淡々』とは感情を捨てることではなく、感情に主導権を渡さないことだ。",
+                note: "金言獲得: 【夕方の温冷交代浴と三上のひらめき】",
+                unlockMethod: "m_sauna_reset",
+                choices: [
+                    {
+                        text: "🏆 免許皆伝：金言手帳を開いて総復習する",
+                        openBook: true
+                    },
+                    {
+                        text: "🔄 もう一度最初から修練をおさらいする",
+                        restart: true
+                    }
+                ]
+            }
+        ]
+    }
+};
+
+let typewriterTimer = null;
+
+function renderCurrentStep() {
+    const chapData = SCENARIO_CHAPTERS[playerStats.currentChapter];
+    const stepData = chapData.steps[playerStats.currentStep];
+
+    const isMale = stepData.speaker === 'male';
+    const speakerTitle = document.getElementById('speaker-title-badge');
+
+    // Automatically Pan and Zoom the Real Photo Video Feed to the active speaker
+    if (isMale) {
+        setCameraView('male');
+        speakerTitle.innerHTML = `<i data-lucide="sparkle" class="w-3.5 h-3.5 text-amber-400"></i><span>顧問（先生）の発言</span>`;
+    } else {
+        setCameraView('female');
+        speakerTitle.innerHTML = `<i data-lucide="sparkle" class="w-3.5 h-3.5 text-sky-400"></i><span>パートナー顧問の発言</span>`;
+    }
+
+    // Typewriter effect synchronized with Lip-Sync Engine
+    const textContainer = document.getElementById('dialogue-text');
+    clearInterval(typewriterTimer);
+    stopLipSync();
+    textContainer.innerText = "";
+    
+    let charIndex = 0;
+    const fullText = stepData.text;
+    typewriterTimer = setInterval(() => {
+        if (charIndex < fullText.length) {
+            const curChar = fullText.charAt(charIndex);
+            textContainer.innerText += curChar;
+            
+            // リップシンクのパルス発火（文字送り・母音に合わせて開閉）
+            if (charIndex % 2 === 0) {
+                triggerLipSyncPulse(stepData.speaker, curChar);
+            }
+
+            charIndex++;
+        } else {
+            clearInterval(typewriterTimer);
+            stopLipSync(); // セリフ完了で口を閉じる
+        }
+    }, 28);
+
+    // Dialogue note
+    document.getElementById('dialogue-note-text').innerText = stepData.note || "";
+
+    // Proverb Unlocks
+    if (stepData.unlockMethod) unlockMethodCard(stepData.unlockMethod);
+    if (stepData.unlockMethod2) unlockMethodCard(stepData.unlockMethod2);
+
+    // Interactive Area
+    const interactiveArea = document.getElementById('training-interactive-area');
+    interactiveArea.innerHTML = "";
+
+    if (stepData.interactive) {
+        setupInteractiveArea(stepData.interactive, interactiveArea);
+    }
+
+    // Choices Buttons
+    const choicesContainer = document.getElementById('player-choices');
+    choicesContainer.innerHTML = "";
+
+    if (stepData.choices && stepData.choices.length > 0) {
+        stepData.choices.forEach((choice, idx) => {
+            const btn = document.createElement('button');
+            btn.className = "w-full p-3 sm:p-3.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-amber-400/50 text-left text-xs sm:text-sm text-slate-100 font-medium transition shadow-md flex items-center justify-between group active:scale-[0.98]";
+            btn.innerHTML = `
+                <span class="flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-lg bg-amber-500/20 text-amber-300 text-xs flex items-center justify-center font-mono font-bold group-hover:bg-amber-500 group-hover:text-slate-950 transition">${idx + 1}</span>
+                    <span>${choice.text}</span>
+                </span>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:text-amber-300 transition shrink-0 ml-1"></i>
+            `;
+            btn.onclick = () => selectChoice(choice);
+            choicesContainer.appendChild(btn);
+        });
+    }
+
+    updateStatsDisplay();
+    lucide.createIcons();
+}
+
+function selectChoice(choice) {
+    audio.playTone(540, 'triangle', 0.15, 0.1);
+
+    if (choice.dantan) playerStats.dantan = Math.min(100, playerStats.dantan + choice.dantan);
+    if (choice.decompose) playerStats.decompose = Math.min(100, playerStats.decompose + choice.decompose);
+
+    if (choice.openBook) {
+        openNotebookModal();
+        return;
+    }
+    if (choice.restart) {
+        resetTraining();
+        return;
+    }
+
+    if (choice.nextChapter !== undefined) {
+        switchChapter(choice.nextChapter);
+        return;
+    }
+
+    if (choice.next !== undefined) {
+        playerStats.currentStep = choice.next;
+        renderCurrentStep();
+    }
+}
+
+function switchChapter(chapNum) {
+    audio.playTone(480, 'sine', 0.15, 0.1);
+    playerStats.currentChapter = chapNum;
+    playerStats.currentStep = 0;
+
+    for (let i = 1; i <= 5; i++) {
+        const tab = document.getElementById(`tab-chap-${i}`);
+        if (i === chapNum) {
+            tab.className = "px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-sky-500/20 text-sky-300 border border-sky-400/40 shadow-sm";
+        } else {
+            tab.className = "px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200";
+        }
+    }
+
+    renderCurrentStep();
+}
+
+function pokeAdvisors() {
+    audio.playTone(620, 'sine', 0.12, 0.15);
+    const hints = [
+        { s: 'male', text: "顧問（先生）「おや、画面越しに目が合ったね！淡々と手を動かしているかい？」" },
+        { s: 'female', text: "パートナー顧問「いい？考えすぎは毒よ。まず5秒だけ手を動かすの！」" },
+        { s: 'male', text: "顧問（先生）「できない時は君が悪いんじゃない。タスクが重すぎるんだよ。」" },
+        { s: 'female', text: "パートナー顧問「夕方はサウナで脳のキャッシュを蒸発させちゃいなさい。」" }
+    ];
+    const picked = hints[Math.floor(Math.random() * hints.length)];
+    setCameraView(picked.s);
+    triggerLipSyncPulse(picked.s, 'あ');
+    document.getElementById('dialogue-note-text').innerText = picked.text;
+    triggerWaveformPulse();
+    setTimeout(stopLipSync, 700);
+}
+</script>
+
+<script>
+function setupInteractiveArea(type, container) {
+    if (type === 'five_sec_hold') {
+        container.innerHTML = `
+            <div class="w-full max-w-sm bg-slate-800/90 border border-amber-400/40 rounded-2xl p-4 text-center shadow-lg">
+                <div class="text-xs text-amber-300 font-bold mb-1">【実技】側坐核5秒着火ホールド</div>
+                <div class="text-[11px] text-slate-400 mb-3">下のボタンを5秒間押し続けて、脳へ物理信号を送り込みます</div>
+                <div class="relative w-24 h-24 mx-auto my-1 flex items-center justify-center">
+                    <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" stroke="#334155" stroke-width="8" fill="none" />
+                        <circle id="hold-circle" cx="50" cy="50" r="40" stroke="#f59e0b" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="251" stroke-linecap="round" fill="none" class="transition-all duration-75" />
+                    </svg>
+                    <span id="hold-sec-text" class="absolute text-xl font-black text-amber-300 font-mono">5.0</span>
+                </div>
+                <button id="btn-interactive-hold" 
+                        onmousedown="startHold5Sec()" 
+                        onmouseup="endHold5Sec()" 
+                        ontouchstart="startHold5Sec(event)" 
+                        ontouchend="endHold5Sec(event)"
+                        class="w-full mt-3 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:scale-95 text-slate-950 font-black rounded-xl text-xs transition shadow-md select-none cursor-pointer">
+                    👇 ここを長押しして5秒着火！
+                </button>
+            </div>
+        `;
+    } else if (type === 'decompose_puzzle') {
+        container.innerHTML = `
+            <div class="w-full max-w-md bg-slate-800/90 border border-sky-400/40 rounded-2xl p-3.5 shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-sky-300">【実技】巨大タスク分解パズル</span>
+                    <span class="text-[10px] text-slate-400">正しい20分極小タスクを3つ選べ</span>
+                </div>
+                <div class="text-[11px] text-slate-300 mb-2.5 bg-slate-900/60 p-2 rounded-lg border border-slate-700">
+                    大タスク: <span class="text-rose-300 font-bold">『短編マンガのプロットを完成させる』</span>
+                </div>
+                <div class="grid grid-cols-1 gap-1.5" id="puzzle-options">
+                    <button onclick="togglePuzzlePick(this, true)" class="puzzle-btn p-2 rounded-xl bg-slate-800 border border-slate-700 text-left text-xs text-slate-200 hover:border-sky-400 transition flex items-center justify-between">
+                        <span>A. 主人公の欲望（やりたいこと）をノートに1行書く</span>
+                        <span class="badge-status text-[10px] text-slate-500 font-mono">未選択</span>
+                    </button>
+                    <button onclick="togglePuzzlePick(this, false)" class="puzzle-btn p-2 rounded-xl bg-slate-800 border border-slate-700 text-left text-xs text-slate-200 hover:border-sky-400 transition flex items-center justify-between">
+                        <span>B. 3時間気合を入れて一気に結末まで考え抜く</span>
+                        <span class="badge-status text-[10px] text-slate-500 font-mono">未選択</span>
+                    </button>
+                    <button onclick="togglePuzzlePick(this, true)" class="puzzle-btn p-2 rounded-xl bg-slate-800 border border-slate-700 text-left text-xs text-slate-200 hover:border-sky-400 transition flex items-center justify-between">
+                        <span>C. 紙に鉛筆でコマ枠を3つだけ適当に引く</span>
+                        <span class="badge-status text-[10px] text-slate-500 font-mono">未選択</span>
+                    </button>
+                    <button onclick="togglePuzzlePick(this, true)" class="puzzle-btn p-2 rounded-xl bg-slate-800 border border-slate-700 text-left text-xs text-slate-200 hover:border-sky-400 transition flex items-center justify-between">
+                        <span>D. 20分タイマーをセットし、最初のセリフを3行置く</span>
+                        <span class="badge-status text-[10px] text-slate-500 font-mono">未選択</span>
+                    </button>
+                </div>
+                <button onclick="verifyPuzzle()" class="w-full mt-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold transition">
+                    分解レシピを決定する
+                </button>
+            </div>
+        `;
+    } else if (type === 'idea_spurt') {
+        container.innerHTML = `
+            <div class="w-full max-w-sm bg-slate-800/90 border border-indigo-400/40 rounded-2xl p-4 text-center shadow-lg">
+                <div class="text-xs font-bold text-indigo-300 mb-1">【実技】駄作乱打スパート（10秒）</div>
+                <div class="text-[11px] text-slate-400 mb-2">質を考えずに連打！脳のリミッターを外します</div>
+                <div class="flex items-center justify-around my-2 font-mono">
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">残り時間</span>
+                        <span id="spurt-timer" class="text-xl font-bold text-amber-300">10s</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">吐き出した量</span>
+                        <span id="spurt-count" class="text-2xl font-black text-sky-300">0</span>
+                    </div>
+                </div>
+                <button id="btn-spurt-hit" onclick="hitIdeaSpurt()" class="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-400 hover:to-sky-400 active:scale-95 text-white font-black rounded-xl text-sm transition shadow-md cursor-pointer select-none">
+                    💥 くだらない種を打ち出す！
+                </button>
+            </div>
+        `;
+    } else if (type === 'eve_prep') {
+        container.innerHTML = `
+            <div class="w-full max-w-md bg-slate-800/90 border border-indigo-400/40 rounded-2xl p-3.5 shadow-lg">
+                <div class="text-xs font-bold text-indigo-300 mb-1">【実技】明朝4:30のファーストステップ仕込み</div>
+                <div class="text-[11px] text-slate-400 mb-2">起きて最初の3秒で手を伸ばすタスクを机に置きます</div>
+                <input id="input-eve-task" type="text" value="キャンバスを開いて最初の線を3本引く" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-400 mb-2">
+                <div class="flex flex-wrap gap-1.5 mb-3">
+                    <button onclick="setEveChoice('ノートを開き鉛筆を1行目に置く')" class="text-[10px] bg-slate-700/80 hover:bg-slate-700 px-2 py-0.5 rounded text-sky-300">ノートを置く</button>
+                    <button onclick="setEveChoice('キャラの顔の下書き丸を1個描く')" class="text-[10px] bg-slate-700/80 hover:bg-slate-700 px-2 py-0.5 rounded text-sky-300">丸を1個描く</button>
+                    <button onclick="setEveChoice('タイトル案を3文字だけメモする')" class="text-[10px] bg-slate-700/80 hover:bg-slate-700 px-2 py-0.5 rounded text-sky-300">タイトル3文字</button>
+                </div>
+                <button onclick="submitEveTask()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition">
+                    机の上にセットして就寝準備完了
+                </button>
+            </div>
+        `;
+    } else if (type === 'sauna_zen') {
+        container.innerHTML = `
+            <div class="w-full max-w-sm bg-slate-800/90 border border-emerald-400/40 rounded-2xl p-4 text-center shadow-lg">
+                <div class="text-xs font-bold text-emerald-300 mb-1">【実技】温冷交代・外気浴の深呼吸</div>
+                <div class="text-[11px] text-slate-400 mb-3" id="sauna-breath-label">「吸って……吐いて……雑念を手放す」</div>
+                <div class="relative w-20 h-20 mx-auto my-1 flex items-center justify-center">
+                    <div id="sauna-breath-orb" class="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-emerald-400 transition-all duration-1000 shadow-lg shadow-emerald-500/30"></div>
+                </div>
+                <button onclick="advanceBreathZen()" class="w-full mt-3 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold rounded-xl text-xs transition shadow-md">
+                    息を調え、ととのいを深める
+                </button>
+            </div>
+        `;
+    }
+}
+
+// 5 Sec Hold Logic
+let holdStartTime = 0;
+let holdTimerId = null;
+
+function startHold5Sec(e) {
+    if (e && e.cancelable) e.preventDefault();
+    audio.init();
+    holdStartTime = Date.now();
+    const circle = document.getElementById('hold-circle');
+    const txt = document.getElementById('hold-sec-text');
+
+    clearInterval(holdTimerId);
+    holdTimerId = setInterval(() => {
+        const elapsed = Date.now() - holdStartTime;
+        const remain = Math.max(0, (5000 - elapsed) / 1000);
+        const progress = Math.min(1, elapsed / 5000);
+
+        if (txt) txt.innerText = remain.toFixed(1);
+        if (circle) circle.style.strokeDashoffset = 251 - (251 * progress);
+
+        audio.playTone(300 + (progress * 400), 'sawtooth', 0.05, 0.03);
+
+        if (elapsed >= 5000) {
+            clearInterval(holdTimerId);
+            holdTimerId = null;
+            audio.playAwakeningChord();
+            playerStats.currentStep = 3;
+            renderCurrentStep();
+        }
+    }, 50);
+}
+
+function endHold5Sec(e) {
+    if (e && e.cancelable) e.preventDefault();
+    if (holdTimerId) {
+        clearInterval(holdTimerId);
+        holdTimerId = null;
+        const circle = document.getElementById('hold-circle');
+        const txt = document.getElementById('hold-sec-text');
+        if (circle) circle.style.strokeDashoffset = 251;
+        if (txt) txt.innerText = '5.0';
+    }
+}
+
+// Puzzle Logic
+function togglePuzzlePick(btn, isCorrect) {
+    audio.playTone(450, 'sine', 0.1, 0.08);
+    const badge = btn.querySelector('.badge-status');
+    btn.dataset.correct = isCorrect ? "true" : "false";
+
+    if (btn.classList.contains('selected-pick')) {
+        btn.classList.remove('selected-pick', 'bg-sky-950/60', 'border-sky-400');
+        btn.classList.add('bg-slate-800', 'border-slate-700');
+        badge.innerText = '未選択';
+        badge.className = 'badge-status text-[10px] text-slate-500 font-mono';
+    } else {
+        btn.classList.add('selected-pick', 'bg-sky-950/60', 'border-sky-400');
+        btn.classList.remove('bg-slate-800', 'border-slate-700');
+        badge.innerText = '採用 ✓';
+        badge.className = 'badge-status text-[10px] text-sky-400 font-mono font-bold';
+    }
+}
+
+function verifyPuzzle() {
+    const selected = document.querySelectorAll('.selected-pick');
+    let hasWrong = false;
+    let correctCount = 0;
+
+    selected.forEach(el => {
+        if (el.dataset.correct === "true") correctCount++;
+        else hasWrong = true;
+    });
+
+    if (!hasWrong && correctCount === 3) {
+        audio.playAwakeningChord();
+        playerStats.decompose += 15;
+        playerStats.currentStep = 3;
+        renderCurrentStep();
+    } else {
+        audio.playTone(220, 'sawtooth', 0.25, 0.12);
+        setCameraView('female');
+        triggerLipSyncPulse('female', 'お');
+        document.getElementById('dialogue-note-text').innerText = "パートナー顧問「ちょっと待って！『3時間気合で考える』が入ってるわよ。それは巨大タスクのままでしょ！20分以内のものだけ選びなさい！」";
+        setTimeout(stopLipSync, 1000);
+    }
+}
+
+// Idea Spurt Logic
+let spurtStarted = false;
+let spurtTimeRemain = 10;
+let spurtHits = 0;
+let spurtTimerInterval = null;
+
+function hitIdeaSpurt() {
+    audio.playTone(500 + Math.random() * 300, 'triangle', 0.08, 0.08);
+    triggerWaveformPulse();
+
+    if (!spurtStarted) {
+        spurtStarted = true;
+        spurtTimeRemain = 10;
+        spurtHits = 0;
+        spurtTimerInterval = setInterval(() => {
+            spurtTimeRemain--;
+            const timerEl = document.getElementById('spurt-timer');
+            if (timerEl) timerEl.innerText = `${spurtTimeRemain}s`;
+
+            if (spurtTimeRemain <= 0) {
+                clearInterval(spurtTimerInterval);
+                finishSpurt();
+            }
+        }, 1000);
+    }
+
+    spurtHits++;
+    const countEl = document.getElementById('spurt-count');
+    if (countEl) countEl.innerText = spurtHits;
+}
+
+function finishSpurt() {
+    audio.playAwakeningChord();
+    playerStats.dantan += 15;
+    playerStats.currentStep = 3;
+    renderCurrentStep();
+}
+
+// Eve Prep Logic
+function setEveChoice(txt) {
+    const el = document.getElementById('input-eve-task');
+    if (el) el.value = txt;
+}
+function submitEveTask() {
+    audio.playAwakeningChord();
+    playerStats.dantan += 15;
+    playerStats.currentStep = 3;
+    renderCurrentStep();
+}
+
+// Sauna Zen Breath
+let breathStep = 0;
+function advanceBreathZen() {
+    breathStep++;
+    audio.playTone(396 + breathStep * 66, 'sine', 0.3, 0.1);
+    const orb = document.getElementById('sauna-breath-orb');
+    const label = document.getElementById('sauna-breath-label');
+
+    if (breathStep === 1) {
+        orb.className = "w-16 h-16 rounded-full bg-gradient-to-tr from-amber-400 to-rose-400 transition-all duration-700 shadow-xl shadow-amber-500/40";
+        label.innerText = "「熱気から水風呂へ……自律神経がダイナミックに切り替わる……」";
+    } else if (breathStep === 2) {
+        orb.className = "w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-400 transition-all duration-700 shadow-xl shadow-sky-500/40";
+        label.innerText = "「外気浴の微風……頭の中の不要なキャッシュが全て蒸発していく……」";
+    } else if (breathStep >= 3) {
+        audio.playZenBell();
+        playerStats.energy = 100;
+        playerStats.currentStep = 2;
+        renderCurrentStep();
+    }
+}
+
+function unlockMethodCard(id) {
+    const card = METHOD_ARCHIVE.find(m => m.id === id);
+    if (card && !card.unlocked) {
+        card.unlocked = true;
+        audio.playZenBell();
+    }
+    updateUnlockedCount();
+}
+
+function updateUnlockedCount() {
+    const unlocked = METHOD_ARCHIVE.filter(m => m.unlocked).length;
+    document.getElementById('unlocked-count').innerText = `${unlocked}/${METHOD_ARCHIVE.length}`;
+}
+
+function openNotebookModal() {
+    const list = document.getElementById('notebook-list');
+    list.innerHTML = METHOD_ARCHIVE.map((m, idx) => `
+        <div class="p-3.5 rounded-2xl border ${m.unlocked ? 'bg-slate-800/90 border-amber-400/30' : 'bg-slate-900/60 border-slate-800 opacity-60'} transition">
+            <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold ${m.unlocked ? 'text-amber-300' : 'text-slate-500'} flex items-center gap-1.5 font-serif-title">
+                    <span class="w-5 h-5 rounded-md ${m.unlocked ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-800 text-slate-500'} flex items-center justify-center text-[10px] font-mono">${idx + 1}</span>
+                    ${m.unlocked ? m.title : '？？？？？？（修練で解放）'}
+                </span>
+                <span class="text-[10px] ${m.unlocked ? 'text-emerald-400 font-bold' : 'text-slate-600'}">
+                    ${m.unlocked ? '習得済' : '未伝授'}
+                </span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed pl-6">
+                ${m.unlocked ? m.body : '二人顧問との対話や修練を進めると、この教えが手帳に記されます。'}
+            </p>
+        </div>
+    `).join('');
+
+    document.getElementById('modal-notebook').classList.remove('hidden');
+    audio.playTone(440, 'triangle', 0.15, 0.1);
+    lucide.createIcons();
+}
+
+function openConsultModal() {
+    document.getElementById('modal-consult').classList.remove('hidden');
+    audio.playTone(500, 'sine', 0.1, 0.1);
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.add('hidden');
+}
+
+function pickConsultTopic(type) {
+    closeModal('modal-consult');
+    const answers = {
+        early_wake: {
+            speaker: "male",
+            text: "『二度寝してしまう』んだね。\n多くの人が『何時に寝るか』から考え始めるが、それは間違いだよ。\n\n『何時に寝ようと、絶対に4:30に起きる』と決めるんだ。寝不足ならその日の夜21:30に寝ればいい。起きる時間を固定すれば、3日で体内時計は自然と調律されるよ。",
+            note: "パートナー顧問「そうそう、二度寝しそうになったら布団から足だけピョコッと出すのよ！」"
+        },
+        lazy_start: {
+            speaker: "female",
+            text: "『めんどくさい』のね！\nいいこと教えてあげる。めんどくさいのはあなたの心が怠けてるんじゃなくて、脳が省エネ運転してるだけ！\n\n戦おうとしちゃダメ。5秒だけ手先を動かして、側坐核に『はい、仕事の時間ですよ〜』って騙し討ちをかけるのよ。",
+            note: "顧問（先生）「考える前にノートを開く。それだけで勝てるよ。」"
+        },
+        too_big: {
+            speaker: "male",
+            text: "『タスクが重すぎて頭がフリーズする』……うん、その正直な感覚を大切にしなさい。\nそれはタスクが『作品をつくる』という巨大な岩の塊になっているからだ。\n\n『消しゴムを机に置く』『キャンバスに線を1本だけ引く』。20分で必ず終わる極小タスクに刻み直してごらん。岩は砂粒になるよ。",
+            note: "パートナー顧問「タスクを責めなさい。自分を責めちゃダメ！」"
+        },
+        quality_trap: {
+            speaker: "female",
+            text: "『完璧主義で筆が進まない』のね。\n最初から名作を描こうなんて傲慢よ！\n今日あなたが描くものは『あとで捨てるための粗大ゴミ』でいいの。ゴミを10個捨てたあとに、本物の宝石が手元に残るんだから。",
+            note: "顧問（先生）「傑作は、おびただしい量の駄作の成れの果てに生まれるんだよ。」"
+        }
+    };
+
+    applyConsultAnswer(answers[type]);
+}
+
+function submitCustomConsult() {
+    const input = document.getElementById('input-custom-consult');
+    const val = input.value.trim();
+    if (!val) return;
+    closeModal('modal-consult');
+
+    const genericAnswer = {
+        speaker: "male",
+        text: `『${val}』という悩みだね。\nどんな複雑な悩みであっても、朝メソッドの処方箋はひとつだよ。\n\n【前夜に極小のタスクを机に仕込み、明朝4:30に淡々と手を動かすこと】。\n悩むのは作業中ではなく、作業が終わった後でいい。動けば悩みの大半は幻覚のように消え去るよ。`,
+        note: "パートナー顧問「悩んでる暇があったら、まず手を5秒動かしなさい！」"
+    };
+
+    applyConsultAnswer(genericAnswer);
+    input.value = "";
+}
+
+function applyConsultAnswer(res) {
+    audio.playAwakeningChord();
+
+    const isMale = res.speaker === 'male';
+    if (isMale) {
+        setCameraView('male');
+        document.getElementById('speaker-title-badge').innerHTML = `<i data-lucide="sparkle" class="w-3.5 h-3.5 text-amber-400"></i><span>顧問（先生）の回答</span>`;
+    } else {
+        setCameraView('female');
+        document.getElementById('speaker-title-badge').innerHTML = `<i data-lucide="sparkle" class="w-3.5 h-3.5 text-sky-400"></i><span>パートナー顧問の回答</span>`;
+    }
+
+    const textContainer = document.getElementById('dialogue-text');
+    clearInterval(typewriterTimer);
+    stopLipSync();
+    textContainer.innerText = "";
+
+    let charIndex = 0;
+    const fullText = res.text;
+    typewriterTimer = setInterval(() => {
+        if (charIndex < fullText.length) {
+            const c = fullText.charAt(charIndex);
+            textContainer.innerText += c;
+            if (charIndex % 2 === 0) triggerLipSyncPulse(res.speaker, c);
+            charIndex++;
+        } else {
+            clearInterval(typewriterTimer);
+            stopLipSync();
+        }
+    }, 28);
+
+    document.getElementById('dialogue-note-text').innerText = res.note;
+
+    const choicesContainer = document.getElementById('player-choices');
+    choicesContainer.innerHTML = `
+        <button onclick="renderCurrentStep()" class="w-full col-span-2 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-sky-500 hover:opacity-95 text-slate-950 font-bold text-xs sm:text-sm transition shadow-lg">
+            二人顧問の助言を受け止め、修練の続きへ戻る
+        </button>
+    `;
+    lucide.createIcons();
+}
+
+function updateStatsDisplay() {
+    document.getElementById('stat-dantan').innerText = playerStats.dantan;
+    document.getElementById('bar-dantan').style.width = `${Math.min(100, Math.max(10, playerStats.dantan))}%`;
+
+    document.getElementById('stat-decompose').innerText = playerStats.decompose;
+    document.getElementById('bar-decompose').style.width = `${Math.min(100, Math.max(10, playerStats.decompose))}%`;
+
+    document.getElementById('stat-energy').innerText = playerStats.energy;
+    document.getElementById('bar-energy').style.width = `${Math.min(100, Math.max(10, playerStats.energy))}%`;
+}
+
+function resetTraining() {
+    playerStats = {
+        dantan: 15,
+        decompose: 10,
+        energy: 100,
+        currentChapter: 1,
+        currentStep: 0
+    };
+    switchChapter(1);
+    audio.playTone(320, 'sine', 0.2, 0.1);
+}
+
+// Window load lifecycle
+window.onload = function() {
+    initDragAndDrop();
+    initLipSyncEngine();
+    renderCurrentStep();
+    updateUnlockedCount();
+    lucide.createIcons();
+
+    // Auto-attempt playing matsuda.mp4 if browser allows muted autoplay
+    const vidEl = document.getElementById('advisor-live-video');
+    if (vidEl) {
+        vidEl.play().catch(() => {});
+    }
+
+    const unlockAudio = () => {
+        audio.init();
+        if (vidEl && vidEl.paused) vidEl.play().catch(() => {});
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('touchstart', unlockAudio);
+    };
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+};
+</script>
+</body>
+</html>
