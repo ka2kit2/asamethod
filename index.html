@@ -95,23 +95,10 @@
             box-shadow: 0 0 25px rgba(56, 189, 248, 0.4) !important;
         }
 
-        /* Mouth Overlay Canvas */
-        #mouth-canvas {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 15;
-        }
-
         /* Breathing bob while speaking */
         @keyframes headBob {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-1.5px); }
-        }
-        .head-speaking {
-            animation: headBob 0.35s ease-in-out infinite;
         }
     </style>
     <script>
@@ -154,14 +141,6 @@
         <button onclick="openScriptModal()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-xs flex items-center gap-1.5 text-amber-300 transition font-bold" title="顧問用セリフ台本を確認">
             <i data-lucide="scroll" class="w-3.5 h-3.5 text-amber-400"></i>
             <span class="text-[11px]">撮影用セリフ台本</span>
-        </button>
-        <button onclick="openCalibrationModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/80 text-xs flex items-center gap-1.5 text-amber-300 transition" title="口元の位置や口パク感度を調整">
-            <i data-lucide="settings" class="w-3.5 h-3.5 text-amber-400"></i>
-            <span class="text-[11px] hidden sm:inline">口元調整</span>
-        </button>
-        <button onclick="openVideoGuideModal()" class="px-2.5 py-1.5 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 text-xs flex items-center gap-1.5 text-purple-200 transition" title="撮影動画の仕様と入れ替えガイド">
-            <i data-lucide="video" class="w-3.5 h-3.5 text-purple-300"></i>
-            <span class="text-[11px] font-bold">動画撮影仕様</span>
         </button>
         <button id="btn-sound" onclick="toggleSound()" class="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 text-xs flex items-center gap-1.5 text-slate-300 transition">
             <i id="icon-sound" data-lucide="volume-2" class="w-3.5 h-3.5 text-amber-400"></i>
@@ -266,9 +245,6 @@
                              alt="朝メソッド顧問 実写中継"
                              class="advisor-feed-img hidden"
                              onerror="this.src='https://placehold.co/640x360/1e293b/f8fafc?text=AsaMethod+Komon'" />
-
-                        <!-- Real-time Lip-Sync Canvas Layer -->
-                        <canvas id="mouth-canvas"></canvas>
                     </div>
 
                     <!-- Scanline texture -->
@@ -282,19 +258,6 @@
                         <span id="stream-cam-label" class="text-amber-400 font-bold">顧問スタジオ LIVE</span>
                         <span class="text-slate-500">|</span>
                         <span id="media-type-badge" class="font-mono text-[9px] text-amber-300">idle.mp4</span>
-                    </div>
-
-                    <!-- Scanline texture -->
-                    <div class="absolute inset-0 scanlines"></div>
-
-                    <!-- Hidden file input for uploading photo or video directly -->
-                    <input type="file" id="photo-upload-input" accept="image/*,video/*" class="hidden" onchange="handleManualPhotoUpload(event)">
-
-                    <!-- Live feed UI overlays -->
-                    <div class="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-black/75 backdrop-blur-md border border-white/10 text-[10px] text-slate-300 pointer-events-none z-20">
-                        <span id="stream-cam-label" class="text-amber-400 font-bold">顧問スタジオ LIVE</span>
-                        <span class="text-slate-500">|</span>
-                        <span id="media-type-badge" class="font-mono text-[9px] text-amber-300">matsuda.mp4</span>
                     </div>
 
                     <div class="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-lg bg-black/75 backdrop-blur-md border border-white/10 pointer-events-none z-20">
@@ -324,7 +287,7 @@
                 <div class="mt-2 px-3 py-1.5 bg-slate-950/60 rounded-xl border border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
                     <span class="truncate flex items-center gap-1.5">
                         <i data-lucide="tv" class="w-3.5 h-3.5 text-amber-400"></i>
-                        <span id="stream-subtext">顧問（私）のセリフに合わせて動画・音声が連動します</span>
+                        <span id="stream-subtext">撮影動画の生声と連動して進行します</span>
                     </span>
                     <button onclick="pokeAdvisors()" class="text-amber-400 hover:text-amber-300 text-[10px] shrink-0 font-bold ml-1">👋 会釈する</button>
                 </div>
@@ -352,8 +315,8 @@
                             <i data-lucide="info" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i>
                             <span id="dialogue-note-text" class="text-[11px] text-slate-300 leading-snug"></span>
                         </div>
-                        <button id="btn-replay-voice" onclick="replayCurrentDialogueSpeech()" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] font-bold text-amber-300 flex items-center gap-1 shrink-0 transition" title="セリフ音声をもう一度聴く">
-                            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+                        <button id="btn-replay-voice" onclick="replayCurrentDialogueSpeech()" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] font-bold text-amber-300 flex items-center gap-1 shrink-0 transition" title="セリフ動画をもう一度再生">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                             <span class="hidden sm:inline">もう一度聴く</span>
                         </button>
                     </div>
@@ -608,95 +571,30 @@
 <div id="voice-start-overlay" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-amber-400/40 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl space-y-4">
         <div class="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-300 mx-auto flex items-center justify-center">
-            <i data-lucide="volume-2" class="w-8 h-8 animate-pulse"></i>
+            <i data-lucide="play-circle" class="w-8 h-8 text-amber-400 animate-pulse"></i>
         </div>
         <div>
             <h3 class="text-base font-extrabold text-white font-serif-title">朝メソッド道場へようこそ</h3>
             <p class="text-xs text-slate-300 mt-1">顧問（私）とのマンツーマン対話修練を開始します。</p>
         </div>
         <button onclick="dismissVoiceOverlayAndStart()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-sky-500 hover:opacity-90 text-slate-950 font-black rounded-xl text-sm transition shadow-lg shadow-amber-500/20">
-            🎙️ 音声付きで修練を開始する
+            🎬 顧問の生声動画で修練を開始する
         </button>
     </div>
 </div>
 
 <script>
 /* ==========================================================================
-   Web Speech API & 動画クリップ同期制御エンジン
+   撮影動画クリップ再生・生音声同期エンジン
    ========================================================================== */
-class DojoVoiceNarrator {
-    constructor() {
-        this.synth = window.speechSynthesis || null;
-        this.enabled = true;
-        this.currentUtterance = null;
-        this.voices = [];
-        if (this.synth) {
-            this.loadVoices();
-            if (this.synth.onvoiceschanged !== undefined) {
-                this.synth.onvoiceschanged = () => this.loadVoices();
-            }
-        }
-    }
 
-    loadVoices() {
-        if (!this.synth) return;
-        this.voices = this.synth.getVoices().filter(v => v.lang.startsWith('ja') || v.lang.includes('JP'));
-    }
+let currentActiveClip = 'idle.mp4';
 
-    stop() {
-        if (this.synth) {
-            this.synth.cancel();
-        }
-        this.currentUtterance = null;
-    }
-
-    speak(text, onBoundary = null, onEnd = null) {
-        if (!this.synth || !this.enabled) {
-            if (onEnd) onEnd();
-            return;
-        }
-
-        this.stop();
-
-        const cleanText = text.replace(/【.*?】/g, '').replace(/https?:\/\/\S+/g, '');
-        const utter = new SpeechSynthesisUtterance(cleanText);
-        utter.lang = 'ja-JP';
-
-        utter.pitch = 0.90;
-        utter.rate = 1.0;
-        const preferredVoice = this.voices.find(v => v.name.includes('Ichiro') || v.name.includes('Otoya') || v.name.includes('Keita') || v.name.includes('Male') || v.name.includes('Google 日本語'));
-        if (preferredVoice) utter.voice = preferredVoice;
-
-        utter.onstart = () => {
-            triggerWaveformPulse();
-        };
-
-        utter.onboundary = (e) => {
-            triggerLipSyncPulse(cleanText.charAt(e.charIndex) || 'あ');
-            if (onBoundary) onBoundary(e);
-        };
-
-        utter.onend = () => {
-            stopLipSync();
-            if (onEnd) onEnd();
-        };
-
-        utter.onerror = () => {
-            stopLipSync();
-            if (onEnd) onEnd();
-        };
-
-        this.currentUtterance = utter;
-        this.synth.speak(utter);
-    }
-}
-
-const voiceNarrator = new DojoVoiceNarrator();
-
-// 撮影動画クリップ再生エンジン
+// 撮影動画クリップ再生エンジン（動画本来の生声を再生）
 function playVideoClipForStep(clipCandidate) {
     const vidEl = document.getElementById('advisor-live-video');
     const badge = document.getElementById('media-type-badge');
+    const mic = document.getElementById('speaker-mic-name');
     if (!vidEl) return;
 
     // act2_task.mp4.mp4 の二重拡張子にも自動対応
@@ -715,14 +613,16 @@ function playVideoClipForStep(clipCandidate) {
         }
 
         const src = candidates[candidateIdx++];
+        currentActiveClip = src;
         vidEl.loop = false;
-        vidEl.muted = false; // 撮影時の生声がある場合は音を鳴らす
+        vidEl.muted = false; // 動画本来の生声をしっかり鳴らす
+        vidEl.volume = 1.0;
         vidEl.src = src;
 
         vidEl.play().then(() => {
             if (badge) badge.innerText = src;
-            const mic = document.getElementById('speaker-mic-name');
-            if (mic) mic.innerText = "KOMON VIDEO";
+            if (mic) mic.innerText = "LIVE VOICE";
+            triggerWaveformPulse();
         }).catch(() => {
             // 再生失敗（ファイル名不一致など）なら次の候補
             tryPlayNext();
@@ -745,7 +645,7 @@ function playIdleLoop() {
 
     vidEl.onended = null;
     vidEl.loop = true;
-    vidEl.muted = true;
+    vidEl.muted = true; // 待機ループは静かに無音
 
     // idle.mp4 があれば優先、なければ matsuda.mp4
     const idleCandidates = ['idle.mp4', 'matsuda.mp4'];
@@ -812,13 +712,6 @@ class DojoAudio {
         } catch(e) {}
     }
 
-    playSpeakerVoiceTick() {
-        if (!this.enabled) return;
-        this.init();
-        const baseFreq = 210 + Math.random() * 50;
-        this.playTone(baseFreq, 'triangle', 0.045, 0.04);
-    }
-
     playZenBell() {
         if (!this.enabled) return;
         this.init();
@@ -853,200 +746,20 @@ function toggleSound() {
     audio.enabled = !audio.enabled;
     const label = document.getElementById('label-sound');
     const icon = document.getElementById('icon-sound');
+    const vidEl = document.getElementById('advisor-live-video');
+
     if (audio.enabled) {
         audio.init();
+        if (vidEl && !vidEl.loop) vidEl.muted = false;
         label.innerText = '音: ON';
         icon.setAttribute('data-lucide', 'volume-2');
         audio.playTone(580, 'sine', 0.1, 0.1);
     } else {
+        if (vidEl) vidEl.muted = true;
         label.innerText = '音: OFF';
         icon.setAttribute('data-lucide', 'volume-x');
     }
     lucide.createIcons();
-}
-</script>
-
-<script>
-/* ==========================================================================
-   リアルタイム・リップシンク（顧問一人の口元アニメーション）
-   ========================================================================== */
-const mouthConfig = {
-    x: 0.50, // 顧問の口中心 X
-    y: 0.48, // 顧問の口中心 Y
-    w: 0.055,
-    h: 0.026,
-    lipScale: 1.0
-};
-
-const lipState = {
-    isSpeaking: false,
-    mouthOpenAmount: 0,
-    targetOpenAmount: 0,
-    mouthWidthStretch: 1,
-    rafId: null
-};
-
-let mouthCanvas = null;
-let mouthCtx = null;
-let liveImg = null;
-
-function initLipSyncEngine() {
-    mouthCanvas = document.getElementById('mouth-canvas');
-    liveImg = document.getElementById('advisor-live-img');
-    if (!mouthCanvas) return;
-
-    mouthCtx = mouthCanvas.getContext('2d');
-    resizeMouthCanvas();
-    window.addEventListener('resize', resizeMouthCanvas);
-
-    if (!lipState.rafId) {
-        lipState.rafId = requestAnimationFrame(lipSyncRenderLoop);
-    }
-}
-
-function resizeMouthCanvas() {
-    const box = document.getElementById('video-box');
-    if (!mouthCanvas || !box) return;
-    const rect = box.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    mouthCanvas.width = (rect.width || 640) * dpr;
-    mouthCanvas.height = (rect.height || 360) * dpr;
-}
-
-function lipSyncRenderLoop() {
-    lipState.mouthOpenAmount += (lipState.targetOpenAmount - lipState.mouthOpenAmount) * 0.35;
-    renderLipDeformation();
-    requestAnimationFrame(lipSyncRenderLoop);
-}
-
-function renderLipDeformation() {
-    if (!mouthCtx || !mouthCanvas) return;
-    const cw = mouthCanvas.width;
-    const ch = mouthCanvas.height;
-
-    mouthCtx.clearRect(0, 0, cw, ch);
-
-    if (lipState.isSpeaking && lipState.mouthOpenAmount > 0.03) {
-        const cx = mouthConfig.x * cw;
-        const cy = mouthConfig.y * ch;
-        const baseW = mouthConfig.w * cw * lipState.mouthWidthStretch;
-        const baseH = mouthConfig.h * ch * (1 + lipState.mouthOpenAmount * 2.2 * mouthConfig.lipScale);
-
-        mouthCtx.save();
-
-        mouthCtx.beginPath();
-        mouthCtx.ellipse(cx, cy, baseW * 0.75, baseH * 0.85, 0, 0, Math.PI * 2);
-        
-        const cavityGrad = mouthCtx.createRadialGradient(cx, cy - (baseH * 0.2), 2, cx, cy, baseW * 0.8);
-        cavityGrad.addColorStop(0, '#220808');
-        cavityGrad.addColorStop(0.6, '#3a1111');
-        cavityGrad.addColorStop(1, '#561a1a');
-        mouthCtx.fillStyle = cavityGrad;
-        mouthCtx.fill();
-
-        if (lipState.mouthOpenAmount > 0.3) {
-            mouthCtx.fillStyle = 'rgba(245, 240, 235, 0.75)';
-            mouthCtx.beginPath();
-            mouthCtx.rect(cx - baseW * 0.35, cy - baseH * 0.5, baseW * 0.7, baseH * 0.25);
-            mouthCtx.fill();
-        }
-
-        if (lipState.mouthOpenAmount > 0.4) {
-            mouthCtx.fillStyle = 'rgba(180, 80, 80, 0.65)';
-            mouthCtx.beginPath();
-            mouthCtx.ellipse(cx, cy + baseH * 0.45, baseW * 0.4, baseH * 0.35, 0, 0, Math.PI);
-            mouthCtx.fill();
-        }
-
-        mouthCtx.strokeStyle = 'rgba(70, 25, 25, 0.5)';
-        mouthCtx.lineWidth = Math.max(1, cw * 0.002);
-        mouthCtx.stroke();
-
-        mouthCtx.beginPath();
-        mouthCtx.ellipse(cx, cy + baseH * 0.9, baseW * 0.6, baseH * 0.3, 0, 0, Math.PI);
-        mouthCtx.fillStyle = 'rgba(255, 225, 210, 0.25)';
-        mouthCtx.fill();
-
-        mouthCtx.restore();
-    }
-}
-
-function triggerLipSyncPulse(char) {
-    lipState.isSpeaking = true;
-
-    let openDepth = 0.55 + Math.random() * 0.4;
-    let stretch = 1.0;
-
-    if (char) {
-        if ("あおアオ".includes(char)) {
-            openDepth = 0.95;
-            stretch = 1.05;
-        } else if ("いエいえ".includes(char)) {
-            openDepth = 0.5;
-            stretch = 1.35;
-        } else if ("うオうお".includes(char)) {
-            openDepth = 0.65;
-            stretch = 0.75;
-        } else if ("、。！？\n ".includes(char)) {
-            openDepth = 0.0;
-        }
-    }
-
-    lipState.targetOpenAmount = openDepth;
-    lipState.mouthWidthStretch = stretch;
-
-    const viewport = document.getElementById('stream-viewport');
-    if (viewport && openDepth > 0.2) {
-        viewport.classList.add('head-speaking');
-    }
-
-    audio.playSpeakerVoiceTick();
-    triggerWaveformPulse();
-
-    setTimeout(() => {
-        lipState.targetOpenAmount = 0.05 + Math.random() * 0.15;
-    }, 90);
-}
-
-function stopLipSync() {
-    lipState.targetOpenAmount = 0;
-    setTimeout(() => {
-        lipState.isSpeaking = false;
-        const viewport = document.getElementById('stream-viewport');
-        if (viewport) viewport.classList.remove('head-speaking');
-    }, 150);
-}
-
-function updateMouthConfig() {
-    const maleX = parseFloat(document.getElementById('slider-male-x').value);
-    const maleY = parseFloat(document.getElementById('slider-male-y').value);
-    const scale = parseFloat(document.getElementById('slider-mouth-scale').value);
-
-    mouthConfig.x = maleX / 100;
-    mouthConfig.y = maleY / 100;
-    mouthConfig.lipScale = scale;
-
-    document.getElementById('val-male-x').innerText = `${maleX.toFixed(1)}%`;
-    document.getElementById('val-male-y').innerText = `${maleY.toFixed(1)}%`;
-    document.getElementById('val-mouth-scale').innerText = `${scale.toFixed(1)}x`;
-}
-
-function testTalkMouth() {
-    lipState.isSpeaking = true;
-    let count = 0;
-    const testInt = setInterval(() => {
-        triggerLipSyncPulse(['あ','い','う','え','お'][count % 5]);
-        count++;
-        if (count > 8) {
-            clearInterval(testInt);
-            stopLipSync();
-        }
-    }, 120);
-}
-
-function openCalibrationModal() {
-    document.getElementById('modal-calibration').classList.remove('hidden');
-    audio.playTone(480, 'triangle', 0.1, 0.1);
 }
 </script>
 
@@ -1074,11 +787,11 @@ function applyMediaFile(file) {
         vidEl.src = videoUrl;
         vidEl.classList.remove('hidden');
         imgEl.classList.add('hidden');
+        vidEl.muted = false;
         vidEl.play().catch(() => {});
-        if (badge) badge.innerText = "VIDEO STREAM (matsuda.mp4)";
-        showAdvisorStreamNote("顧問（私）の動画をロードしました。セリフと連動して再生されます。");
+        if (badge) badge.innerText = file.name;
+        showAdvisorStreamNote("撮影動画をロードしました。動画の音声で再生されます。");
         audio.playAwakeningChord();
-        setTimeout(resizeMouthCanvas, 200);
     } else {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -1087,9 +800,8 @@ function applyMediaFile(file) {
             vidEl.classList.add('hidden');
             vidEl.pause();
             if (badge) badge.innerText = "PHOTO STREAM";
-            showAdvisorStreamNote("写真をロードしました。リップシンクが適用されます。");
+            showAdvisorStreamNote("写真をロードしました。");
             audio.playAwakeningChord();
-            setTimeout(resizeMouthCanvas, 200);
         };
         reader.readAsDataURL(file);
     }
@@ -1098,11 +810,6 @@ function applyMediaFile(file) {
 function showAdvisorStreamNote(msg) {
     const el = document.getElementById('stream-subtext');
     if (el) el.innerText = msg;
-}
-
-function openVideoGuideModal() {
-    document.getElementById('modal-video-guide').classList.remove('hidden');
-    audio.playTone(520, 'triangle', 0.12, 0.1);
 }
 
 function initDragAndDrop() {
@@ -1148,7 +855,7 @@ function triggerWaveformPulse() {
         b3.style.height = `${4 + Math.random() * 14}px`;
         b4.style.height = `${4 + Math.random() * 10}px`;
         ticks++;
-        if (ticks > 8) {
+        if (ticks > 12) {
             clearInterval(waveInt);
             b1.style.height = '4px';
             b2.style.height = '8px';
@@ -1499,7 +1206,7 @@ function renderCurrentStep() {
     const speakerTitle = document.getElementById('speaker-title-badge');
     speakerTitle.innerHTML = `<i data-lucide="sparkle" class="w-3.5 h-3.5 text-amber-400"></i><span>顧問（私）からの言葉</span>`;
 
-    // 該当ステップ用の撮影動画を再生
+    // 該当ステップ用の撮影動画を生声付きで再生
     if (stepData.clip) {
         playVideoClipForStep(stepData.clip);
     } else {
@@ -1508,30 +1215,19 @@ function renderCurrentStep() {
 
     const textContainer = document.getElementById('dialogue-text');
     clearInterval(typewriterTimer);
-    voiceNarrator.stop();
-    stopLipSync();
     textContainer.innerText = "";
     
     let charIndex = 0;
     const fullText = stepData.text;
 
-    // 音声合成（動画側に音声が入っている場合は補助的に動作）
-    voiceNarrator.speak(fullText);
-
     typewriterTimer = setInterval(() => {
         if (charIndex < fullText.length) {
-            const curChar = fullText.charAt(charIndex);
-            textContainer.innerText += curChar;
-
-            if (charIndex % 2 === 0) {
-                triggerLipSyncPulse(curChar);
-            }
-
+            textContainer.innerText += fullText.charAt(charIndex);
             charIndex++;
         } else {
             clearInterval(typewriterTimer);
         }
-    }, 32);
+    }, 28);
 
     document.getElementById('dialogue-note-text').innerText = stepData.note || "";
 
@@ -1620,10 +1316,8 @@ function pokeAdvisors() {
         "顧問（私）「夕方はサウナで脳のキャッシュを蒸発させなさい。」"
     ];
     const picked = hints[Math.floor(Math.random() * hints.length)];
-    triggerLipSyncPulse('あ');
     document.getElementById('dialogue-note-text').innerText = picked;
     triggerWaveformPulse();
-    setTimeout(stopLipSync, 700);
 }
 </script>
 
@@ -1674,24 +1368,18 @@ function applyConsultAnswer(res) {
 
     const textContainer = document.getElementById('dialogue-text');
     clearInterval(typewriterTimer);
-    voiceNarrator.stop();
-    stopLipSync();
     textContainer.innerText = "";
-
-    voiceNarrator.speak(res.text);
 
     let charIndex = 0;
     const fullText = res.text;
     typewriterTimer = setInterval(() => {
         if (charIndex < fullText.length) {
-            const c = fullText.charAt(charIndex);
-            textContainer.innerText += c;
-            if (charIndex % 2 === 0) triggerLipSyncPulse(c);
+            textContainer.innerText += fullText.charAt(charIndex);
             charIndex++;
         } else {
             clearInterval(typewriterTimer);
         }
-    }, 32);
+    }, 28);
 
     document.getElementById('dialogue-note-text').innerText = res.note;
 
@@ -1731,11 +1419,12 @@ function toggleVideoPlaybackManual() {
 }
 
 function replayCurrentDialogueSpeech() {
-    const chapData = SCENARIO_CHAPTERS[playerStats.currentChapter];
-    const stepData = chapData.steps[playerStats.currentStep];
-    if (stepData && stepData.text) {
-        voiceNarrator.speak(stepData.text);
-    }
+    const vid = document.getElementById('advisor-live-video');
+    if (!vid) return;
+    vid.currentTime = 0;
+    vid.muted = false;
+    vid.play().catch(() => {});
+    triggerWaveformPulse();
 }
 
 function unlockMethodCard(id) {
@@ -1964,7 +1653,6 @@ function setupInteractiveArea(type, container) {
 
 window.onload = function() {
     initDragAndDrop();
-    initLipSyncEngine();
     renderCurrentStep();
     lucide.createIcons();
 };
